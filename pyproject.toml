@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=64.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "BNTRserver"
+description = "Runs backend functionality for Banter Mobile App"
+version = "1.0.0"
+requires-python = ">=3.8"
+dependencies = [
+    "click",
+]
+
+[project.scripts]
+BNTRserver-start = "BNTRserver.__main__:main"
