@@ -1,2 +1,3 @@
 -e git+https://github.com/cmcgravey/Banter_Server.git@0054039ecea2ed9905565621c34386893b5459fc#egg=BNTRserver
 click==8.1.7
+requests=2.31.0
