@@ -3,6 +3,9 @@ import threading
 import socket
 import json
 import logging
+import requests
+import bs4
+
 
 # logger records output of server 
 LOGGER = logging.getLogger(__name__)
@@ -10,6 +13,20 @@ LOGGER = logging.getLogger(__name__)
 class Server:
 
     def game_loop(self):
+        """Search for games happening soon and insert into database to begin questions thread."""
+        self.insert_teams()
+
+    def insert_teams(self):
+        """Insert teams into the database."""
+
+        url = 'https://fbref.com/en/comps/9/Premier-League-Stats'
+        page = requests.get(url)
+
+        soup = bs4.BeautifulSoup(page.text, 'html.parser')
+        teams = soup.find_all('th', attrs={"class":"left"})
+
+        LOGGER.info(teams)
+
         pass
 
     def __init__(self, host, port):
