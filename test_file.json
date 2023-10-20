@@ -1,0 +1,286 @@
+{
+    "question_stage": "Pregame",
+    "label": "totals",
+    "question": "How many goals will be scored?",
+    "Game_id": 12,
+    "opt1": [
+        "Over 3.5",
+        28,
+        11
+    ],
+    "opt2": [
+        "Under 3.5",
+        31,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "spreads",
+    "question": "Predict the Spread",
+    "Game_id": 12,
+    "opt1": [
+        "Everton 1.5",
+        30,
+        12
+    ],
+    "opt2": [
+        "Liverpool -1.5",
+        29,
+        11
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "totals",
+    "question": "How many goals will be scored?",
+    "Game_id": 12,
+    "opt1": [
+        "Over 3.5",
+        28,
+        11
+    ],
+    "opt2": [
+        "Under 3.5",
+        31,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "yellow_cards",
+    "question": "Will there be over 5 yellow cards played?",
+    "Game_id": 12,
+    "opt1": [
+        "Yes",
+        30,
+        12
+    ],
+    "opt2": [
+        "No",
+        30,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "h2h",
+    "question": "Who's going to win?",
+    "Game_id": 12,
+    "opt1": [
+        "Everton",
+        15,
+        6
+    ],
+    "opt2": [
+        "Liverpool",
+        37,
+        14
+    ],
+    "opt3": [
+        "Draw",
+        17,
+        6
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "totals",
+    "question": "How many goals will be scored?",
+    "Game_id": 12,
+    "opt1": [
+        "Over 3.5",
+        28,
+        11
+    ],
+    "opt2": [
+        "Under 3.5",
+        31,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "spreads",
+    "question": "Predict the Spread",
+    "Game_id": 12,
+    "opt1": [
+        "Everton 1.5",
+        30,
+        12
+    ],
+    "opt2": [
+        "Liverpool -1.5",
+        29,
+        11
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "btts",
+    "question": "Will both teams score?",
+    "Game_id": 12,
+    "opt1": [
+        "Yes",
+        32,
+        12
+    ],
+    "opt2": [
+        "No",
+        27,
+        10
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "red_card",
+    "question": "Will there be a red card this game?",
+    "Game_id": 12,
+    "opt1": [
+        "Yes",
+        30,
+        12
+    ],
+    "opt2": [
+        "No",
+        30,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "h2h",
+    "question": "Who's going to win?",
+    "Game_id": 12,
+    "opt1": [
+        "Everton",
+        15,
+        6
+    ],
+    "opt2": [
+        "Liverpool",
+        37,
+        14
+    ],
+    "opt3": [
+        "Draw",
+        17,
+        6
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "red_card",
+    "question": "Will there be a red card this game?",
+    "Game_id": 12,
+    "opt1": [
+        "Yes",
+        30,
+        12
+    ],
+    "opt2": [
+        "No",
+        30,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "yellow_cards",
+    "question": "Will there be over 5 yellow cards played?",
+    "Game_id": 12,
+    "opt1": [
+        "Yes",
+        30,
+        12
+    ],
+    "opt2": [
+        "No",
+        30,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "totals",
+    "question": "How many goals will be scored?",
+    "Game_id": 12,
+    "opt1": [
+        "Over 3.5",
+        28,
+        11
+    ],
+    "opt2": [
+        "Under 3.5",
+        31,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "h2h",
+    "question": "Who's going to win?",
+    "Game_id": 12,
+    "opt1": [
+        "Everton",
+        15,
+        6
+    ],
+    "opt2": [
+        "Liverpool",
+        37,
+        14
+    ],
+    "opt3": [
+        "Draw",
+        17,
+        6
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "red_card",
+    "question": "Will there be a red card this game?",
+    "Game_id": 12,
+    "opt1": [
+        "Yes",
+        30,
+        12
+    ],
+    "opt2": [
+        "No",
+        30,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "totals",
+    "question": "How many goals will be scored?",
+    "Game_id": 12,
+    "opt1": [
+        "Over 3.5",
+        28,
+        11
+    ],
+    "opt2": [
+        "Under 3.5",
+        31,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "totals",
+    "question": "How many goals will be scored?",
+    "Game_id": 12,
+    "opt1": [
+        "Over 3.5",
+        28,
+        11
+    ],
+    "opt2": [
+        "Under 3.5",
+        31,
+        12
+    ]
+}{
+    "question_stage": "Pregame",
+    "label": "spreads",
+    "question": "Predict the Spread",
+    "Game_id": 12,
+    "opt1": [
+        "Everton 1.5",
+        30,
+        12
+    ],
+    "opt2": [
+        "Liverpool -1.5",
+        29,
+        11
+    ]
+}

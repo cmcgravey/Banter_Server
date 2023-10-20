@@ -155,6 +155,8 @@ class gameSession:
         
     def get_event_id(self):
         """Get event ID from game ID (From the Odds API), in order to fetch unique sports Odds."""
+        # Use GET request to get team names using self.gameID
+
         return "4026494a30d50d6e544312b4110353da"
     
     def callSportsbookAPI(self, event_id, markets):
