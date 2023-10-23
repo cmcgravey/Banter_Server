@@ -16,10 +16,7 @@ class Server:
     def game_loop(self):
         """Search for games happening soon and insert into database to begin questions thread."""
         LOGGER.info("Inserting teams...")
-
         self.insert_teams()
-
-        LOGGER.info("Searching for games...")
 
         next_game_found = False
         next = None
@@ -30,6 +27,7 @@ class Server:
             current_time = datetime.now()
 
             if not next_game_found:
+                LOGGER.info("Searching for games...")
                 next, next_time = self.find_next_game()
                 next_game_found = True
 
