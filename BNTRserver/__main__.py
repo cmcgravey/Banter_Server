@@ -7,6 +7,7 @@ import requests
 import bs4
 import time
 from datetime import datetime, timedelta
+from BNTRserver.questionBuilder import gameSession
 
 # logger records output of server 
 LOGGER = logging.getLogger(__name__)
@@ -32,6 +33,11 @@ class Server:
                 next_game_found = True
 
             diff = next_time - current_time
+
+            if diff < timedelta(minutes=15):
+                LOGGER.info("Starting gameSession... ")
+                gameSession(next['id'])
+                next_game_found = False
 
             LOGGER.info(f'Game is {diff} away')
             
