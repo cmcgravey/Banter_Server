@@ -22,7 +22,7 @@ case $1 in
     output1="$(pgrep -f BNTRserver || true)"
     if ! [ -z "$output1" ]; then
         echo "Error: BNTRserver is already running"
-        echo "Try: ./bin/scrape stop"
+        echo "Try: ./bin/server stop"
         exit 1
     fi
 

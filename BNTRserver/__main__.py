@@ -5,7 +5,8 @@ import json
 import logging
 import requests
 import bs4
-
+import time
+from datetime import datetime, timedelta
 
 # logger records output of server 
 LOGGER = logging.getLogger(__name__)
@@ -14,9 +15,88 @@ class Server:
 
     def game_loop(self):
         """Search for games happening soon and insert into database to begin questions thread."""
-        self.insert_teams()
-        
+        LOGGER.info("Inserting teams...")
 
+        self.insert_teams()
+
+        LOGGER.info("Searching for games...")
+
+        next_game_found = False
+        next = None
+        next_time = None
+
+        while self.signals['shutdown'] != True:
+
+            current_time = datetime.now()
+
+            if not next_game_found:
+                next, next_time = self.find_next_game()
+                next_game_found = True
+
+            diff = next_time - current_time
+
+            LOGGER.info(f'Game is {diff} away')
+            
+            time.sleep(10)
+
+
+    def find_next_game(self):
+        """Find next upcoming game."""
+        url = 'https://fbref.com/en/comps/9/schedule/Premier-League-Scores-and-Fixtures'
+        page = requests.get(url)
+        soup = bs4.BeautifulSoup(page.text, 'html.parser')
+
+        fixture_table = soup.find('table', {'class': 'stats_table'})
+        rows = fixture_table.find_all('tr')
+
+        current_date = datetime.now()
+        next_game = None
+
+        for idx, row in enumerate(rows):
+            if idx == 0:
+                pass
+            else:
+                cells = row.find_all('td')
+                if cells[1].text == '' or cells[2].text == '':
+                    pass
+                else:
+                    game_date = cells[1].text.replace('-', '/')
+                    game_time = cells[2].text.strip()
+                    game_time += ':00'
+                    game_string = game_date + ' ' + game_time
+                    game_string = datetime.strptime(game_string, '%Y/%m/%d %H:%M:%S')
+                    game_string = game_string - timedelta(hours=5)
+                    if game_string >= current_date:
+                        next_game = cells
+                        game = self.insert_game(next_game)
+                        LOGGER.info(f'Gametime: {game_string}')
+                        LOGGER.info(f'Game: {game}')
+                        break
+        
+        return game, game_string
+
+    
+    def insert_game(self, next_game):
+        """Insert game into the database."""
+        home = next_game[3].text
+        away = next_game[7].text
+        teamID1 = self.teams_dict[home]
+        teamID2 = self.teams_dict[away]
+
+        context = {
+            'api_key': self.API_KEY,
+            'teamID1': teamID1,
+            'teamID2': teamID2
+        }
+
+        api_url = 'http://ec2-34-238-139-153.compute-1.amazonaws.com/api/games/'
+            
+        r = requests.post(api_url, json=context)
+        response = r.json()
+
+        return response
+
+                
     def insert_teams(self):
         """Insert teams into the database."""
 
@@ -50,10 +130,10 @@ class Server:
             
             r = requests.post(api_url, json=context)
             response = r.json()
-            self.teams_dict[response['teamid']] = response['name']
+            self.teams_dict[response['name']] = response['teamid']
 
         LOGGER.info(self.teams_dict)
-            
+   
 
     def __init__(self, host, port):
         """Initalize Server."""
@@ -116,8 +196,6 @@ class Server:
                     self.game_thread.join()
                     LOGGER.info("shutting down")
                     return
-
-
 
 
 @click.command()
