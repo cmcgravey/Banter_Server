@@ -2,71 +2,87 @@
 import requests
 import json
 import random
+import time
 
 
 
 class gameSession:
-    def __init__(self, gameID):
+    def __init__(self, gameID, team1, team2):
         """In-Game Thread. Check game times and send filled-out questions to database periodically."""
-        self.game_status = None
-        self.event_id = None
-        self.team_1 = ""
-        self.team_2 = ""
+        self.game_status = "IN PLAY"
+        self.game_time = None
+        self.game_stage = None
+        
         self.gameID = gameID
-        self.question_templates = {}
+        self.event_id = self.get_event_id()
+        self.fixture_id = None
+        self.prem_league_id = 39
+        
+        self.team1_goals = {
+            "halftime": 0,
+            "final": 0,
+            "name": team1
+            
+        }
+        
+        self.team2_goals = {
+            "halftime": 0,
+            "final": 0,
+            "name": team2
+        }
+        
+        self.team1 = team1
+        self.team2 = team2
+    
+        self.BANTER_API_KEY = "87ab0a3db51d297d3d1cf2d4dcdcb71b"
+        self.BANTER_API_ENDPOINT = "http://ec2-34-238-139-153.compute-1.amazonaws.com/api/"
+        
+        self.non_book_questions = ["next_goal", "yellow_cards", "red_card"]
         # Add in: Answer Options, gain/loss for answer
+        self.question_templates = {}
         self.question_templates["pregame"] = [
-            {"question_stage": "Pregame",
+            {"question_stage": "pregame",
              "label": "spreads",
              "question": "Predict the Spread",
              "Game_id": self.gameID},
             
-            {"question_stage": "Pregame",
+            {"question_stage": "pregame",
              "label": "h2h",
              "question": "Who's going to win?",
              "Game_id": self.gameID},
             
-            {"question_stage": "Pregame",
+            {"question_stage": "pregame",
              "label": "totals",
              "question": "How many goals will be scored?",
              "Game_id": self.gameID},
             
-            {"question_stage": "Pregame",
+            {"question_stage": "pregame",
              "label": "yellow_cards",
              "question": "Will there be over 5 yellow cards played?",
              "Game_id": self.gameID},
             
-            {"question_stage": "Pregame",
+            {"question_stage": "pregame",
              "label": "btts",
              "question": "Will both teams score?",
              "Game_id": self.gameID},
             
-            {"question_stage": "Pregame",
+            {"question_stage": "pregame",
              "label": "red_card",
              "question": "Will there be a red card this game?",
              "Game_id": self.gameID}
         ]
         
         self.question_templates["ingame"] = [
-            {"question_stage": "ingame",
-             "label": "h2h",
-             "question": "Which team is scoring the next goal?",
-             "Game_id": self.gameID},
             
             {"question_stage": "ingame",
-             "label": "h2h",
-             "question": "Who's going to win?",
+             "label": "h2h_h1",
+             "question": "Who's going to win this half?",
              "Game_id": self.gameID},
             
             {"question_stage": "ingame",
              "label": "totals_h1",
-             "question": "How many goals will there be for the rest of the half?",
+             "question": "How many goals will there be at the end of the half?",
              "Game_id": self.gameID},
-            
-            {"question_stage": "ingame",
-             "label": "h2h_h1",
-             "question": "Which team will score a goal this half?",
-             "Game_id": self.gameID}
             
         ]
         
@@ -86,29 +102,51 @@ class gameSession:
              "question": "How many goals will there be in the second half?",
              "Game_id": self.gameID}
         ]   
+    def run_game_session(self):
+        """Main thread for running the game"""
         
+        self.build_questions("pregame")
+        self.locate_fixture_id()
+        
+        ingame_flag = False
+        halftime_flag = False
+        while self.game_status == "IN PLAY":
+            # Check for game time
+            self.track_game_time()
+            if 20 <= self.game_time <= 30 and self.game_stage == "1H" and ingame_flag == False:
+                ingame_flag = True
+                self.build_questions("ingame")
+            elif self.game_stage == "HT" and halftime_flag == False:
+                self.build_questions("halftime")
+                self.update_scores("halftime")
+                halftime_flag = True
+            time.sleep(60)
+        self.update_scores("final")
+        self.resolve_questions()
+        return
+    
+    def update_scores(self, stage):
+        """Keep data for the score at halftime for reference for answering questions."""
+        scores = self.get_game_scores()
+        for score in scores[0]["scores"]:
+            if score["name"] == self.team1:
+                self.team1_goals[stage] = int(score["score"])
+            else:
+                self.team2_goals[stage] = int(score["score"])
+    
     def build_questions(self, question_stage):
-        """Build questions based off of sports odds"""
+        """Build questions based off of sports odds."""
         sportsbook_data = []
-        if question_stage == "pregame":
-            staged_questions = random.sample(self.question_templates["pregame"], 2)
-        elif question_stage == "ingame":
-            staged_questions = random.sample(self.question_templates["ingame"], 2)
-        else:
-            staged_questions = random.sample(self.question_templates["halftime"], 2)
-            
+        staged_questions = random.sample(self.question_templates[question_stage], 2)
         markets = [question["label"] for question in staged_questions] 
         
-        # Remove non-sportsbook related questions    
-        if "next_goal" in markets:
-            markets.remove("next_goal")
-        if "yellow_cards" in markets:
-            markets.remove("yellow_cards")
-        if "red_card" in markets:
-            markets.remove("red_card")
+        # Remove non-sportsbook related questions 
+        for market in self.non_book_questions:
+            if market in markets:
+                markets.remove(market)   
         # Call sportsbook API to get data
         if len(markets) > 0:
-            sportsbook_data = self.callSportsbookAPI(self.get_event_id(), markets)
+            sportsbook_data = self.callSportsbookAPI(markets)
         # Build each question sequentially
         for i in range(len(staged_questions)):
             # Do different calculation for red and yellow cards, not based on sportsbook odds
@@ -130,7 +168,7 @@ class gameSession:
                     else:
                         staged_questions[i][f"opt{j + 1}"] = (f"{question_odds[j]['name']} {question_odds[j]['point']}",
                                                             rewards[j], pens[j])
-            self.question_testing(staged_questions[i])      
+            self.add_question(staged_questions[i])      
     
     def calculate_banter_points(self, lines):
         """Calculate banter points earned/lost based on converting US Moneyline to probability."""
@@ -156,10 +194,23 @@ class gameSession:
     def get_event_id(self):
         """Get event ID from game ID (From the Odds API), in order to fetch unique sports Odds."""
         # Use GET request to get team names using self.gameID
-
-        return "4026494a30d50d6e544312b4110353da"
+        SPORT = 'soccer_epl'
+        
+        API_KEY = '4176fcde0a060dfeb152fc085e8ec6f9'
+        
+        ENDPOINT = f'https://api.the-odds-api.com/v4/sports/{SPORT}/events/'
+        odds_response = requests.get(
+            ENDPOINT,
+            params={
+                'api_key': API_KEY,
+            }
+        )
+        for event in odds_response:
+            if self.team1 in event.values() and self.team2 in event.values():
+                self.event_id = event["id"]
+                return
     
-    def callSportsbookAPI(self, event_id, markets):
+    def callSportsbookAPI(self, markets):
         """Call sportsbook API to get odds."""
         API_KEY = '4176fcde0a060dfeb152fc085e8ec6f9'
 
@@ -175,7 +226,7 @@ class gameSession:
 
         # Event ID comes from get_event_id(), where we call sportsbook API and locate the correct event ID
         # Event ID is necessary in order to get more specific and special market odds
-        EVENT_ID = event_id # Example: "5528d0b167ff7ae068b6d0478eb997c7" # Tottenham vs. Luton
+        EVENT_ID = self.event_id # Example: "5528d0b167ff7ae068b6d0478eb997c7" # Tottenham vs. Luton
 
         ENDPOINT = f'https://api.the-odds-api.com/v4/sports/{SPORT}/events/{EVENT_ID}/odds'
         
@@ -189,22 +240,256 @@ class gameSession:
                 'dateFormat': DATE_FORMAT,
             }
         )
-        return json.loads(odds_response.text)
+        if odds_response.status_code == 200:
+            print("Sportsbook API request successful")
+            return json.loads(odds_response.text)
+        else:
+            print('SB API Request failed with status code:', odds_response.status_code)
+            return {}
+    
+    def get_game_scores(self):
+        """Use The-Odds API to get in-game scores"""
+        API_KEY = '4176fcde0a060dfeb152fc085e8ec6f9'
+
+        SPORT = 'soccer_epl' 
+        
+        EVENT_ID = self.event_id
+        
+        ENDPOINT = f"https://api.the-odds-api.com/v4/sports/{SPORT}/scores"
+        
+        odds_response = requests.get(
+            ENDPOINT,
+            params={
+                'api_key': API_KEY,
+                'daysFrom': 1,
+                'eventIds': EVENT_ID,
+            }
+        )
+        
+        if odds_response.status_code == 200:
+            print("Sportsbook API request successful")
+            return json.loads(odds_response.text)
+        else:
+            print('SB API Request failed with status code:', odds_response.status_code)
+            return {}
+        
+        
 
         
     def add_question(self, question):
         """Once Questions are built, insert them back into database using banter API."""
-        return
+
+        question["api_key"] = self.BANTER_API_KEY
+        
+        question_url = f"{self.BANTER_API_ENDPOINT}questions/{self.gameID}/"
+
+        response = requests.post(url=question_url,json=question)
+        
+        if response.status_code == 200:
+            print("POST Request | Question -> Database | Successful")
+        else:
+            print('Request failed with status code:', response.status_code)
         
         
     def track_game_time(self):
-        """Ping Sports API (Not Sportsbook) for game time. Separate Thread"""
+        """Use Rapid API for current game time. Called every minute."""
+            
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures?live=all"
+        
+        query = {"fixture": f"{self.fixture_id}"}
+        
+        headers = {
+            "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
+            "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
+        }
+
+        response = requests.get(url, headers=headers, params=query)
+        data = response.json()
+        
+        self.game_time = data["response"][0]["fixture"]["status"]["elapsed"]
+        self.game_stage = data["response"][0]["fixture"]["status"]["short"]
+        self.game_status = "Finished" if data["response"][0]["status"]["long"] == "Match Finished" else "IN PLAY"
+        
         return
+    
+    def locate_fixture_id(self):
+        """Locate the fixture ID for the Rapids API - Football API."""
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures?live=all"
+
+        headers = {
+            "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
+            "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
+        }
+        
+        query = {"league": str(self.prem_league_id)}
+
+        response = requests.get(url, headers=headers, params=query)
+        data = response.json()
+        for response in data["response"]:
+            home = response["teams"]["home"].values()
+            away = response["teams"]["away"].values()
+            if (self.team1 in home or self.team2 in home) and (self.team1 in away or self.team2 in away):
+                self.fixture_id = response["fixture"]["id"]
+                return
+
+    def resolve_questions(self):
+        """Pull the questions from the database with a specific gameID, then resolve the answer for each one using Rapid API."""
+        
+        # Fetch all questions from database
+        
+        api_url = f"{self.BANTER_API_ENDPOINT}questions/{self.gameID}/"
+        
+        data = {"api_key": self.BANTER_API_KEY}
+        
+        response = requests.get(url=api_url, json=data)
+        
+        question_list = response.json()["questions"]
+        
+        # Fetching game statistics now from Rapid API
+        
+        stat_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics"
+        
+        querystring = {"fixture": f"{self.fixture_id}"}
+        
+        headers = {
+                "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
+                "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
+        }
+        response = requests.get(stat_url, headers=headers, params=querystring)
+        
+        statistics = response.json()["response"]
+        
+        # Use questions and statistics to find answers and input back into database.
+        
+        if self.team1_goals["final"] == self.team2_goals["final"]:
+            winning_team = "Draw"
+        else:
+            winning_team = max(self.team1_goals, self.team2_goals, key=lambda team: team["final"])["name"]
+        
+        if self.team1_goals["halftime"] == self.team2_goals["halftime"]:
+            h1_winner = "Draw"
+        else:
+            h1_winner = max(self.team1_goals, self.team2_goals, key=lambda team: team["halftime"])["name"]
+        
+        if (self.team1_goals["final"] - self.team1_goals["halftime"]) > (self.team2_goals["final"] - self.team2_goals["halftime"]):
+            h2_winner = self.team1_goals["name"]
+            
+        elif (self.team1_goals["final"] - self.team1_goals["halftime"]) < (self.team2_goals["final"] - self.team2_goals["halftime"]):
+            h2_winner = self.team2_goals["name"]
+        else:
+            h2_winner = "Draw"
+        
+        final_total = self.team1_goals["final"] + self.team2_goals["final"]
+        
+        h1_total = self.team1_goals["halftime"] + self.team2_goals["halftime"]
+        
+        h2_total = (self.team1_goals["final"] - self.team2_goals["halftime"]) + (self.team1_goals["final"] - self.team2_goals["halftime"])
+        
+        for question in question_list:
+            label = question["label"]
+            answer = None
+                
+                
+            if label == "h2h":
+                mapping = {question[key][0]: key for key in ["opt1", "opt2", "opt3"]}
+                answer = mapping.get(winning_team, None)
+                
+            elif label == "h2h_h1":
+                mapping = {question[key][0]: key for key in ["opt1", "opt2", "opt3"]}
+                answer = mapping.get(h1_winner, None)
+            
+            elif label == "h2h_h2":
+                mapping = {question[key][0]: key for key in ["opt1", "opt2", "opt3"]}
+                answer = mapping.get(h2_winner, None)
+                
+            elif label == "spreads":
+                if winning_team in self.team1_goals.values():
+                    spread = self.team1_goals["final"] - self.team2_goals["final"]
+                else:
+                    spread = self.team2_goals["final"] - self.team1_goals["final"]
+                answer = self.spread_helper(winning_team, spread, question)
+            
+            elif label == "spreads_h2":
+                if h2_winner in self.team1_goals.values():
+                    spread = (self.team1_goals["final"] - self.team1_goals["halftime"]) - ((self.team2_goals["final"] - self.team2_goals["halftime"]))
+                else:
+                    spread = (self.team2_goals["final"] - self.team2_goals["halftime"]) - ((self.team1_goals["final"] - self.team1_goals["halftime"]))
+                answer = self.spread_helper(h2_winner, spread, question)
+            
+            elif label == "totals":
+                answer = self.totals_helper(question, final_total)
+                
+            elif label == "totals_h1":
+                answer = self.totals_helper(question, h1_total)
+            
+            elif label == "totals_h2":
+                answer = self.totals_helper(question, h2_total)
+            
+            elif label == "btts":
+                answer = "Yes" if (self.team1_goals["final"] > 0 and self.team2_goals["final"] > 0) else "No"
+
+            elif label == "yellow_cards":
+                tot_yc = 0
+                for team in statistics:
+                    for event in team["statistics"]:
+                        if event["type"] == "Yellow Cards":
+                            tot_yc += event["value"]
+                            break
+                answer = "opt1" if tot_yc > 5 else "opt2"
+                
+            elif label == "red_card":
+                tot_rc = 0
+                for team in statistics:
+                    for event in team["statistics"]:
+                        if event["type"] == "Red Cards":
+                            tot_rc += event["value"]
+                            break
+                answer = "opt1" if tot_rc > 0 else "opt2" 
+            
+            # Pass answer into database using Banter API
+            data = {
+                "api_key": self.BANTER_API_KEY,
+                "answer": answer
+            }
+            url = f"{self.BANTER_API_ENDPOINT}questions/update/{question['questionID']}/"
+            
+            response = requests.post(url=url,json=data)
+        
+            if response.status_code == 200:
+                print("POST Request | Question Answer -> Database | Successful")
+            else:
+                print('Request failed with status code:', response.status_code)
+        
+            return
+    
+    def spread_helper(self, team_name, goal_diff, data):
+        """Spread resolving helper"""
+        for key in ["opt1", "opt2"]:
+            option_team = data[key][0].split()[0]
+            option_spread = float(data[key][0].split()[1])
+
+            if team_name == option_team:
+                if team_name == data["opt1"][0].split()[0]:  # If the winning team is the team from opt1
+                    if goal_diff >= option_spread:  # Check if they won by at least the spread
+                        return key
+                else:  # If the winning team is the team from opt2
+                    if -goal_diff <= option_spread:  # Check if they won by at least the negative spread
+                        return key
+        return None
+
+    
+    
+    def totals_helper(self, data, goals_scored):
+        """Totals helper."""
+        threshold = float(data["opt1"][0].split()[1])  # Extracting the 3.5 from "Over 3.5"
+
+        if goals_scored > threshold:
+            return "opt1"
+        else:
+            return "opt2"
+        
         
     def question_testing(self, question):
+        """Checking the questions"""
         with open("test_file.json", 'a') as file:
             json.dump(question, file, indent = 4, ensure_ascii=False)
-        
-
-game = gameSession(12)
-game.build_questions("pregame")
