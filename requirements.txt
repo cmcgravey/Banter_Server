@@ -1,3 +1,10 @@
--e git+https://github.com/cmcgravey/Banter_Server.git@0054039ecea2ed9905565621c34386893b5459fc#egg=BNTRserver
+beautifulsoup4==4.12.2
+-e git+https://github.com/cmcgravey/Banter_Server.git@b0ae27e885cab630ae0c963b15bcbb8dc3ce8f3e#egg=BNTRserver
+bs4==0.0.1
+certifi==2023.7.22
+charset-normalizer==3.3.0
 click==8.1.7
-requests=2.31.0
+idna==3.4
+requests==2.31.0
+soupsieve==2.5
+urllib3==2.0.6
