@@ -1,0 +1,774 @@
+{
+    "id": "f77d9e4a963ee0e68fb0f71d51fa6855",
+    "sport_key": "soccer_epl",
+    "sport_title": "EPL",
+    "commence_time": "2023-11-04T15:00:00Z",
+    "home_team": "Burnley",
+    "away_team": "Crystal Palace",
+    "bookmakers": [
+        {
+            "key": "mybookieag",
+            "title": "MyBookie.ag",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:16:41Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 164
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 165
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 228
+                        }
+                    ]
+                },
+                {
+                    "key": "spreads",
+                    "last_update": "2023-10-30T05:16:41Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 155,
+                            "point": -0.5
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": -200,
+                            "point": 0.5
+                        }
+                    ]
+                },
+                {
+                    "key": "totals",
+                    "last_update": "2023-10-30T05:16:41Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": 120,
+                            "point": 2.5
+                        },
+                        {
+                            "name": "Under",
+                            "price": -140,
+                            "point": 2.5
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "fanduel",
+            "title": "FanDuel",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:17:37Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 165
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 175
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 220
+                        }
+                    ]
+                },
+                {
+                    "key": "btts",
+                    "last_update": "2023-10-30T05:18:23Z",
+                    "outcomes": [
+                        {
+                            "name": "Yes",
+                            "price": -124
+                        },
+                        {
+                            "name": "No",
+                            "price": -102
+                        }
+                    ]
+                },
+                {
+                    "key": "h2h_h1",
+                    "last_update": "2023-10-30T05:18:23Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 220
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 240
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "bovada",
+            "title": "Bovada",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:17:12Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 165
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 170
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 235
+                        }
+                    ]
+                },
+                {
+                    "key": "spreads",
+                    "last_update": "2023-10-30T05:17:12Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": -110,
+                            "point": 0.0
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": -110,
+                            "point": 0.0
+                        }
+                    ]
+                },
+                {
+                    "key": "totals",
+                    "last_update": "2023-10-30T05:17:12Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": -112,
+                            "point": 2.25
+                        },
+                        {
+                            "name": "Under",
+                            "price": -108,
+                            "point": 2.25
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "pointsbetus",
+            "title": "PointsBet (US)",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:16:45Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 165
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 175
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 220
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "betmgm",
+            "title": "BetMGM",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:17:53Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 165
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 170
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 220
+                        }
+                    ]
+                },
+                {
+                    "key": "totals",
+                    "last_update": "2023-10-30T05:17:53Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": 110,
+                            "point": 2.5
+                        },
+                        {
+                            "name": "Under",
+                            "price": -150,
+                            "point": 2.5
+                        }
+                    ]
+                },
+                {
+                    "key": "btts",
+                    "last_update": "2023-10-30T05:17:53Z",
+                    "outcomes": [
+                        {
+                            "name": "Yes",
+                            "price": -120
+                        },
+                        {
+                            "name": "No",
+                            "price": -120
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "williamhill_us",
+            "title": "Caesars",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:15:00Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 170
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 165
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 220
+                        }
+                    ]
+                },
+                {
+                    "key": "btts",
+                    "last_update": "2023-10-30T05:17:48Z",
+                    "outcomes": [
+                        {
+                            "name": "Yes",
+                            "price": -120
+                        },
+                        {
+                            "name": "No",
+                            "price": -110
+                        }
+                    ]
+                },
+                {
+                    "key": "spreads",
+                    "last_update": "2023-10-30T05:17:48Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": -200,
+                            "point": 0.5
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 150,
+                            "point": -0.5
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "barstool",
+            "title": "Barstool Sportsbook",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:18:40Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 162
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 162
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 220
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "unibet_us",
+            "title": "Unibet",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:18:40Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 175
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 170
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 230
+                        }
+                    ]
+                },
+                {
+                    "key": "totals",
+                    "last_update": "2023-10-30T05:18:40Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": 112,
+                            "point": 2.5
+                        },
+                        {
+                            "name": "Under",
+                            "price": -139,
+                            "point": 2.5
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "betrivers",
+            "title": "BetRivers",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:16:45Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 175
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 170
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 230
+                        }
+                    ]
+                },
+                {
+                    "key": "totals",
+                    "last_update": "2023-10-30T05:16:45Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": 112,
+                            "point": 2.5
+                        },
+                        {
+                            "name": "Under",
+                            "price": -139,
+                            "point": 2.5
+                        }
+                    ]
+                },
+                {
+                    "key": "btts",
+                    "last_update": "2023-10-30T05:18:33Z",
+                    "outcomes": [
+                        {
+                            "name": "Yes",
+                            "price": -120
+                        },
+                        {
+                            "name": "No",
+                            "price": -109
+                        }
+                    ]
+                },
+                {
+                    "key": "h2h_h1",
+                    "last_update": "2023-10-30T05:18:33Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": -113
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": -125
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "draftkings",
+            "title": "DraftKings",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:18:31Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 170
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 170
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 220
+                        }
+                    ]
+                },
+                {
+                    "key": "btts",
+                    "last_update": "2023-10-30T05:15:16Z",
+                    "outcomes": [
+                        {
+                            "name": "Yes",
+                            "price": -120
+                        },
+                        {
+                            "name": "No",
+                            "price": -110
+                        }
+                    ]
+                },
+                {
+                    "key": "h2h_h1",
+                    "last_update": "2023-10-30T05:15:16Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 235
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 230
+                        },
+                        {
+                            "name": "Draw",
+                            "price": -105
+                        }
+                    ]
+                },
+                {
+                    "key": "h2h_h2",
+                    "last_update": "2023-10-30T05:15:16Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 185
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 195
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 130
+                        }
+                    ]
+                },
+                {
+                    "key": "spreads_h2",
+                    "last_update": "2023-10-30T05:15:16Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": -125,
+                            "point": 0.0
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": -115,
+                            "point": 0.0
+                        }
+                    ]
+                },
+                {
+                    "key": "totals_h1",
+                    "last_update": "2023-10-30T05:15:16Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": -220,
+                            "point": 0.5
+                        },
+                        {
+                            "name": "Under",
+                            "price": 150,
+                            "point": 0.5
+                        }
+                    ]
+                },
+                {
+                    "key": "totals_h2",
+                    "last_update": "2023-10-30T05:15:16Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": -115,
+                            "point": 1.25
+                        },
+                        {
+                            "name": "Under",
+                            "price": -125,
+                            "point": 1.25
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "twinspires",
+            "title": "TwinSpires",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:16:39Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 175
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 170
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 230
+                        }
+                    ]
+                },
+                {
+                    "key": "totals",
+                    "last_update": "2023-10-30T05:16:39Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": 112,
+                            "point": 2.5
+                        },
+                        {
+                            "name": "Under",
+                            "price": -139,
+                            "point": 2.5
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "superbook",
+            "title": "SuperBook",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:16:53Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 165
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 165
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 230
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "betonlineag",
+            "title": "BetOnline.ag",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:18:40Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 172
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 179
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 224
+                        }
+                    ]
+                },
+                {
+                    "key": "spreads",
+                    "last_update": "2023-10-30T05:18:40Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": -109,
+                            "point": 0.0
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": -106,
+                            "point": -0.0
+                        }
+                    ]
+                },
+                {
+                    "key": "totals",
+                    "last_update": "2023-10-30T05:18:40Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": -104,
+                            "point": 2.25
+                        },
+                        {
+                            "name": "Under",
+                            "price": -112,
+                            "point": 2.25
+                        }
+                    ]
+                },
+                {
+                    "key": "h2h_h1",
+                    "last_update": "2023-10-30T05:18:36Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 235
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 245
+                        },
+                        {
+                            "name": "Draw",
+                            "price": -106
+                        }
+                    ]
+                },
+                {
+                    "key": "totals_h1",
+                    "last_update": "2023-10-30T05:18:36Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": 121,
+                            "point": 1.0
+                        },
+                        {
+                            "name": "Under",
+                            "price": -141,
+                            "point": 1.0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "lowvig",
+            "title": "LowVig.ag",
+            "markets": [
+                {
+                    "key": "h2h",
+                    "last_update": "2023-10-30T05:18:24Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": 172
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": 179
+                        },
+                        {
+                            "name": "Draw",
+                            "price": 224
+                        }
+                    ]
+                },
+                {
+                    "key": "spreads",
+                    "last_update": "2023-10-30T05:18:24Z",
+                    "outcomes": [
+                        {
+                            "name": "Burnley",
+                            "price": -109,
+                            "point": 0.0
+                        },
+                        {
+                            "name": "Crystal Palace",
+                            "price": -107,
+                            "point": 0.0
+                        }
+                    ]
+                },
+                {
+                    "key": "totals",
+                    "last_update": "2023-10-30T05:18:24Z",
+                    "outcomes": [
+                        {
+                            "name": "Over",
+                            "price": -104,
+                            "point": 2.25
+                        },
+                        {
+                            "name": "Under",
+                            "price": -112,
+                            "point": 2.25
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

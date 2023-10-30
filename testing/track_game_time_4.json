@@ -1,0 +1,68 @@
+{
+    "fixture": {
+        "id": 1132545,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2023-10-30T17:00:00+00:00",
+        "timestamp": 1698685200,
+        "periods": {
+            "first": 1698685200,
+            "second": null
+        },
+        "venue": {
+            "id": 8543,
+            "name": "Cairo International Stadium",
+            "city": "Cairo"
+        },
+        "status": {
+            "long": "First Half",
+            "short": "1H",
+            "elapsed": 40
+        }
+    },
+    "league": {
+        "id": 233,
+        "name": "Premier League",
+        "country": "Egypt",
+        "logo": "https://media-4.api-sports.io/football/leagues/233.png",
+        "flag": "https://media-4.api-sports.io/flags/eg.svg",
+        "season": 2023,
+        "round": "Regular Season - 5"
+    },
+    "teams": {
+        "home": {
+            "id": 15570,
+            "name": "Burnley",
+            "logo": "https://media-4.api-sports.io/football/teams/15570.png",
+            "winner": true
+        },
+        "away": {
+            "id": 16431,
+            "name": "Crystal Palace",
+            "logo": "https://media-4.api-sports.io/football/teams/16431.png",
+            "winner": false
+        }
+    },
+    "goals": {
+        "home": 1,
+        "away": 0
+    },
+    "score": {
+        "halftime": {
+            "home": 1,
+            "away": 0
+        },
+        "fulltime": {
+            "home": null,
+            "away": null
+        },
+        "extratime": {
+            "home": null,
+            "away": null
+        },
+        "penalty": {
+            "home": null,
+            "away": null
+        }
+    }
+}

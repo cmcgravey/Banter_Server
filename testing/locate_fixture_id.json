@@ -1,0 +1,244 @@
+{
+    "get": "fixtures",
+    "parameters": {
+        "live": "all"
+    },
+    "errors": [],
+    "results": 17,
+    "paging": {
+        "current": 1,
+        "total": 1
+    },
+    "response": [
+        {
+            "fixture": {
+                "id": 1002687,
+                "referee": null,
+                "timezone": "UTC",
+                "date": "2023-10-30T16:45:00+00:00",
+                "timestamp": 1698684300,
+                "periods": {
+                    "first": 1698684300,
+                    "second": null
+                },
+                "venue": {
+                    "id": 863,
+                    "name": "Turner's Cross",
+                    "city": "Cork"
+                },
+                "status": {
+                    "long": "First Half",
+                    "short": "1H",
+                    "elapsed": 18
+                }
+            },
+            "league": {
+                "id": 357,
+                "name": "Premier Division",
+                "country": "Ireland",
+                "logo": "https://media-4.api-sports.io/football/leagues/357.png",
+                "flag": "https://media-4.api-sports.io/flags/ie.svg",
+                "season": 2023,
+                "round": "Regular Season - 33"
+            },
+            "teams": {
+                "home": {
+                    "id": 653,
+                    "name": "Cork City",
+                    "logo": "https://media-4.api-sports.io/football/teams/653.png",
+                    "winner": null
+                },
+                "away": {
+                    "id": 652,
+                    "name": "Shamrock Rovers",
+                    "logo": "https://media-4.api-sports.io/football/teams/652.png",
+                    "winner": null
+                }
+            },
+            "goals": {
+                "home": 0,
+                "away": 0
+            },
+            "score": {
+                "halftime": {
+                    "home": 0,
+                    "away": 0
+                },
+                "fulltime": {
+                    "home": null,
+                    "away": null
+                },
+                "extratime": {
+                    "home": null,
+                    "away": null
+                },
+                "penalty": {
+                    "home": null,
+                    "away": null
+                }
+            },
+            "events": []
+        },
+        {
+            "fixture": {
+                "id": 1132545,
+                "referee": null,
+                "timezone": "UTC",
+                "date": "2023-10-30T17:00:00+00:00",
+                "timestamp": 1698685200,
+                "periods": {
+                    "first": 1698685200,
+                    "second": null
+                },
+                "venue": {
+                    "id": 8543,
+                    "name": "Cairo International Stadium",
+                    "city": "Cairo"
+                },
+                "status": {
+                    "long": "First Half",
+                    "short": "1H",
+                    "elapsed": 3
+                }
+            },
+            "league": {
+                "id": 233,
+                "name": "Premier League",
+                "country": "England",
+                "logo": "https://media-4.api-sports.io/football/leagues/233.png",
+                "flag": "https://media-4.api-sports.io/flags/eg.svg",
+                "season": 2023,
+                "round": "Regular Season - 5"
+            },
+            "teams": {
+                "home": {
+                    "id": 15570,
+                    "name": "Burnley",
+                    "logo": "https://media-4.api-sports.io/football/teams/15570.png",
+                    "winner": null
+                },
+                "away": {
+                    "id": 16431,
+                    "name": "Crystal Palace",
+                    "logo": "https://media-4.api-sports.io/football/teams/16431.png",
+                    "winner": null
+                }
+            },
+            "goals": {
+                "home": 0,
+                "away": 0
+            },
+            "score": {
+                "halftime": {
+                    "home": 0,
+                    "away": 0
+                },
+                "fulltime": {
+                    "home": null,
+                    "away": null
+                },
+                "extratime": {
+                    "home": null,
+                    "away": null
+                },
+                "penalty": {
+                    "home": null,
+                    "away": null
+                }
+            },
+            "events": []
+        },
+        {
+            "fixture": {
+                "id": 1136282,
+                "referee": null,
+                "timezone": "UTC",
+                "date": "2023-10-30T16:30:00+00:00",
+                "timestamp": 1698683400,
+                "periods": {
+                    "first": 1698683400,
+                    "second": null
+                },
+                "venue": {
+                    "id": null,
+                    "name": "Stade Maniang Soumare",
+                    "city": "Thiès"
+                },
+                "status": {
+                    "long": "First Half",
+                    "short": "1H",
+                    "elapsed": 27
+                }
+            },
+            "league": {
+                "id": 403,
+                "name": "Ligue 1",
+                "country": "Senegal",
+                "logo": "https://media-4.api-sports.io/football/leagues/403.png",
+                "flag": "https://media-4.api-sports.io/flags/sn.svg",
+                "season": 2023,
+                "round": "Regular Season - 1"
+            },
+            "teams": {
+                "home": {
+                    "id": 5294,
+                    "name": "Sonacos",
+                    "logo": "https://media-4.api-sports.io/football/teams/5294.png",
+                    "winner": false
+                },
+                "away": {
+                    "id": 13172,
+                    "name": "DSC",
+                    "logo": "https://media-4.api-sports.io/football/teams/13172.png",
+                    "winner": true
+                }
+            },
+            "goals": {
+                "home": 0,
+                "away": 1
+            },
+            "score": {
+                "halftime": {
+                    "home": 0,
+                    "away": 1
+                },
+                "fulltime": {
+                    "home": null,
+                    "away": null
+                },
+                "extratime": {
+                    "home": null,
+                    "away": null
+                },
+                "penalty": {
+                    "home": null,
+                    "away": null
+                }
+            },
+            "events": [
+                {
+                    "time": {
+                        "elapsed": 10,
+                        "extra": null
+                    },
+                    "team": {
+                        "id": 13172,
+                        "name": "DSC",
+                        "logo": "https://media-4.api-sports.io/football/teams/13172.png"
+                    },
+                    "player": {
+                        "id": null,
+                        "name": null
+                    },
+                    "assist": {
+                        "id": null,
+                        "name": null
+                    },
+                    "type": "Goal",
+                    "detail": "Normal Goal",
+                    "comments": null
+                }
+            ]
+        }
+    ]
+}
