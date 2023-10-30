@@ -23,6 +23,15 @@ class Server:
         next = None
         next_time = None
 
+        if self.DEBUG == True:
+            API_URL = 'http://ec2-34-238-139-153.compute-1.amazonaws.com/api/users/'
+            user_json = {
+                'api_key': self.API_KEY,
+                'username': 'cmcgravey',
+                'password': 'password'
+            }
+            requests.post(API_URL, json=user_json)
+
         while self.signals['shutdown'] != True:
 
             current_time = datetime.now()
