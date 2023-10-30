@@ -1,4 +1,4 @@
-{
+{"response":[{
     "fixture": {
         "id": 1132545,
         "referee": null,
@@ -15,9 +15,9 @@
             "city": "Cairo"
         },
         "status": {
-            "long": "Second Half",
+            "long": "Match Finished",
             "short": "2H",
-            "elapsed": 70
+            "elapsed": 90
         }
     },
     "league": {
@@ -65,4 +65,4 @@
             "away": null
         }
     }
-}
+}]}
