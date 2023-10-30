@@ -46,6 +46,16 @@ class Server:
 
     def find_next_game(self):
         """Find next upcoming game."""
+        if self.DEBUG == True:
+            next_game = ['', '', '', 'Burnley', '', '', '', 'Crystal Palace'] 
+            game = self.insert_game(next_game)
+            current_date = datetime.now()
+            current_date += timedelta(minutes=16)
+            game_string = current_date
+            LOGGER.info(f'Gametime: {game_string}')
+            LOGGER.info(f'Game: {game}')
+            return game, game_string
+        
         url = 'https://fbref.com/en/comps/9/schedule/Premier-League-Scores-and-Fixtures'
         page = requests.get(url)
         soup = bs4.BeautifulSoup(page.text, 'html.parser')
@@ -82,16 +92,25 @@ class Server:
     
     def insert_game(self, next_game):
         """Insert game into the database."""
-        home = next_game[3].text
-        away = next_game[7].text
-        teamID1 = self.teams_dict[home]
-        teamID2 = self.teams_dict[away]
 
-        context = {
-            'api_key': self.API_KEY,
-            'teamID1': teamID1,
-            'teamID2': teamID2
-        }
+        if self.DEBUG == True: 
+            context = {
+                'api_key': self.API_KEY,
+                'teamID1': self.teams_dict['Burnley'],
+                'teamID2': self.teams_dict['Crystal Palace']
+            }
+
+        else: 
+            home = next_game[3].text
+            away = next_game[7].text
+            teamID1 = self.teams_dict[home]
+            teamID2 = self.teams_dict[away]
+
+            context = {
+                'api_key': self.API_KEY,
+                'teamID1': teamID1,
+                'teamID2': teamID2
+            }
 
         api_url = 'http://ec2-34-238-139-153.compute-1.amazonaws.com/api/games/'
             
@@ -147,6 +166,7 @@ class Server:
         ## INITIALIZE MEMBER VARIABLES HERE IF NEED BE 
         self.host = host
         self.port = port
+        self.DEBUG = True
 
         ## INITIALIZE API KEY 
         self.API_KEY = '87ab0a3db51d297d3d1cf2d4dcdcb71b'
