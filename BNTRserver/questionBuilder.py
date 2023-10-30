@@ -125,6 +125,7 @@ class gameSession:
              "Game_id": self.gameID}
         ]
         
+        self.run_game_session()
     def run_game_session(self):
         """Main thread for running the game"""
         self.build_questions("pregame")
