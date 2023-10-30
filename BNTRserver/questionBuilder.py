@@ -229,7 +229,7 @@ class gameSession:
         
         ENDPOINT = f'https://api.the-odds-api.com/v4/sports/{SPORT}/events/'
         if self.DEBUG == True:
-            with open("../testing/find_event_id.json", 'r') as file:
+            with open("testing/find_event_id.json", 'r') as file:
                 odds_response = json.load(file)
         else:
             odds_response = requests.get(
@@ -264,7 +264,7 @@ class gameSession:
         ENDPOINT = f'https://api.the-odds-api.com/v4/sports/{SPORT}/events/{EVENT_ID}/odds'
         
         if self.DEBUG == True:
-            with open("../testing/sportsbookOdds.json", 'r') as file:
+            with open("testing/sportsbookOdds.json", 'r') as file:
                 odds_response = json.load(file)
                 return odds_response
         else:
@@ -297,10 +297,10 @@ class gameSession:
         
         if self.DEBUG == True:
             if self.DEBUG_HT == True:
-                filename = "../testing/get_scores_halftime.json"
+                filename = "testing/get_scores_halftime.json"
                 self.DEBUG_HT = False
             else:
-                filename = "../testing/get_scores_final.json"
+                filename = "testing/get_scores_final.json"
             with open(filename, 'r') as file:
                 odds_response = json.load(file)
                 return odds_response
@@ -353,7 +353,7 @@ class gameSession:
             "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
         }
         if self.DEBUG == True:
-            with open(f"../testing/track_game_time_{self.debug_index}.json", 'r') as file:
+            with open(f"testing/track_game_time_{self.debug_index}.json", 'r') as file:
                 data = json.load(file)
         else:
             response = requests.get(url, headers=headers, params=query)
@@ -377,7 +377,7 @@ class gameSession:
         query = {"league": str(self.prem_league_id)}
         
         if self.DEBUG == True:
-            with open(f"../testing/locate_fixture_id.json", 'r') as file:
+            with open(f"testing/locate_fixture_id.json", 'r') as file:
                 data = json.load(file)
         else:
             response = requests.get(url, headers=headers, params=query)
@@ -414,7 +414,7 @@ class gameSession:
                 "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
         }
         if self.DEBUG == True:
-            with open(f"../testing/postgame_statistics.json", 'r') as file:
+            with open(f"testing/postgame_statistics.json", 'r') as file:
                 statistics = json.load(file)
         else:
             response = requests.get(stat_url, headers=headers, params=querystring)
