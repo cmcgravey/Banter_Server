@@ -33,13 +33,13 @@ class Server:
                 next_game_found = True
 
             diff = next_time - current_time
+            LOGGER.info(f'Game is {diff} away')
 
             if diff < timedelta(minutes=15):
                 LOGGER.info("Starting gameSession... ")
-                gameSession(next['id'])
+                current_game = gameSession(next['id'], next['team1'], next['team2'])
+                current_game.run_game_session()
                 next_game_found = False
-
-            LOGGER.info(f'Game is {diff} away')
             
             time.sleep(10)
 
