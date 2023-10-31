@@ -1,5 +1,4 @@
 beautifulsoup4==4.12.2
--e git+https://github.com/cmcgravey/Banter_Server.git@b0ae27e885cab630ae0c963b15bcbb8dc3ce8f3e#egg=BNTRserver
 bs4==0.0.1
 certifi==2023.7.22
 charset-normalizer==3.3.0
