@@ -59,7 +59,7 @@ class Server:
             next_game = ['', '', '', 'Burnley', '', '', '', 'Crystal Palace'] 
             game = self.insert_game(next_game)
             current_date = datetime.now()
-            current_date += timedelta(minutes=16)
+            current_date += timedelta(minutes=15,seconds=20)
             game_string = current_date
             LOGGER.info(f'Gametime: {game_string}')
             LOGGER.info(f'Game: {game}')

@@ -335,6 +335,13 @@ class gameSession:
             print("POST Request | Question -> Database | Successful")
         else:
             print('Request failed with status code:', response.status_code)
+            
+        if self.DEBUG == True:
+            answer_url = f"{self.BANTER_API_ENDPOINT}answers/{response.json()['questionID']}/1/"
+            input = {"api_key": self.BANTER_API_KEY, "answer": "opt1"}
+            response = requests.post(url=answer_url, json=input)
+            print("POST Request | User Answer -> Database | Successful")
+    
         
         
     def track_game_time(self):
