@@ -23,6 +23,8 @@ class Server:
         next = None
         next_time = None
 
+        iterator = 0
+
         if self.DEBUG == True:
             API_URL = 'https://www.banter-api.com/api/users/'
             user_json = {
@@ -42,7 +44,8 @@ class Server:
                 next_game_found = True
 
             diff = next_time - current_time
-            LOGGER.info(f'Game is {diff} away')
+            if (iterator % 6 == 0):
+                LOGGER.info(f'Game is {diff} away')
 
             if diff < timedelta(minutes=15):
                 LOGGER.info("Starting gameSession... ")
@@ -55,9 +58,9 @@ class Server:
                 current_game = gameSession(next['id'], next['team1'], next['team2'])
                 current_game.run_game_session()
                 next_game_found = False
-                if self.DEBUG == True:
-                    break
+                self.DEBUG == False
             
+            iterator += 1
             time.sleep(10)
 
 
