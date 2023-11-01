@@ -4,19 +4,20 @@ import json
 import random
 import time
 import logging
+import re
 
 LOGGER = logging.getLogger(__name__)
 
 class gameSession:
     def __init__(self, gameID, team1_id, team2_id):
         """In-Game Thread. Check game times and send filled-out questions to database periodically."""
-        self.game_status = "IN PLAY"
+        self.game_status = "PENDING"
         self.game_time = None
         self.game_stage = None
         
         # FOR TEST: Crystal Palace vs. Burnley
         # Event Id = f77d9e4a963ee0e68fb0f71d51fa6855
-        self.DEBUG = True
+        self.DEBUG = False
         self.DEBUG_HT = True
         self.debug_index = 1
         
@@ -26,22 +27,24 @@ class gameSession:
         self.prem_league_id = 39
         
         self.BANTER_API_KEY = "87ab0a3db51d297d3d1cf2d4dcdcb71b"
-        self.BANTER_API_ENDPOINT = "http://ec2-34-238-139-153.compute-1.amazonaws.com/api/"
+        self.BANTER_API_ENDPOINT = "https://www.banter-api.com/api/"
         
-        team1_url = f"{self.BANTER_API_ENDPOINT}teams/{team1_id}/"
-        team2_url = f"{self.BANTER_API_ENDPOINT}teams/{team2_id}"
+        team1_url = f"{self.BANTER_API_ENDPOINT}teams/{team1_id}/?api_key={self.BANTER_API_KEY}"
+        team2_url = f"{self.BANTER_API_ENDPOINT}teams/{team2_id}/?api_key={self.BANTER_API_KEY}"
         
-        team1_response = requests.get(url=team1_url,json={"api_key": self.BANTER_API_KEY}).json()
-        team2_response = requests.get(url=team2_url,json={"api_key": self.BANTER_API_KEY}).json()
+        team1_response = requests.get(url=team1_url).json()
+        team2_response = requests.get(url=team2_url).json()
         
         self.team1 = team1_response["name"]
-        
         
         self.team2 = team2_response["name"]
         LOGGER.info(f"{self.team1}")
         LOGGER.info(f"{self.team2}")
         
         self.event_id = self.get_event_id(team1_response["name"], team2_response["name"])
+        
+        self.team1_score = 0
+        self.team2_score = 0
         
         self.team1_goals = {
             "halftime": 0,
@@ -124,42 +127,52 @@ class gameSession:
         ]
     def run_game_session(self):
         """Main thread for running the game"""
+        
         self.build_questions("pregame")
         LOGGER.info("Creating pregame questions")
+        self.game_stage = "NS"
         self.locate_fixture_id()
         
+        if self.DEBUG == False:
+            while self.game_stage == "NS":
+                self.track_game_time()
+        else:
+            self.game_status = "IN PLAY"
+            self.game_stage = "1H"
         
+        if self.game_stage == "SUSP" or self.game_stage == "PST" or self.game_stage == "CANC":
+            LOGGER.info("Match cancelled")
+            return
         ingame_flag = False
         halftime_flag = False
-        while self.game_status == "IN PLAY":
-            # Check for game time
-            self.track_game_time()
-            LOGGER.info(f"Loop {self.debug_index}")
-            self.debug_index += 1
-            if 20 <= self.game_time <= 30 and self.game_stage == "1H" and ingame_flag == False:
-                ingame_flag = True
-                self.build_questions("ingame")
-                LOGGER.info("Creating ingame questions")
-                
-            elif self.game_stage == "HT" and halftime_flag == False:
-                self.build_questions("halftime")
-                LOGGER.info("Creating halftime questions")
-                self.update_scores("halftime")
-                halftime_flag = True
-            time.sleep(5)
-        self.update_scores("final")
-        self.resolve_questions()
-        LOGGER.info("Resolving question answers")
+        if self.game_stage == "1H":
+            self.game_status = "IN PLAY"
+            while self.game_status == "IN PLAY":
+                # Check for game time
+                self.track_game_time()
+                self.update_game_status()
+                LOGGER.info(f"Loop {self.debug_index}")
+                self.debug_index += 1
+                if 20 <= self.game_time <= 30 and self.game_stage == "1H" and ingame_flag == False:
+                    ingame_flag = True
+                    self.build_questions("ingame")
+                    LOGGER.info("Creating ingame questions")
+                    
+                elif self.game_stage == "HT" and halftime_flag == False:
+                    self.build_questions("halftime")
+                    LOGGER.info("Creating halftime questions")
+                    self.update_scores("halftime")
+                    halftime_flag = True
+                time.sleep(5)
+            self.update_scores("final")
+            self.update_game_status()
+            self.resolve_questions()
         return
     
     def update_scores(self, stage):
         """Keep data for the score at halftime for reference for answering questions."""
-        scores = self.get_game_scores()
-        for score in scores[0]["scores"]:
-            if score["name"] == self.team1:
-                self.team1_goals[stage] = int(score["score"])
-            else:
-                self.team2_goals[stage] = int(score["score"])
+        self.team1_goals[stage] = self.team1_score
+        self.team2_goals[stage] = self.team2_score
     
     def build_questions(self, question_stage):
         """Build questions based off of sports odds."""
@@ -282,45 +295,6 @@ class gameSession:
             else:
                 print('SB API Request failed with status code:', odds_response.status_code)
                 return {}
-    
-    def get_game_scores(self):
-        """Use The-Odds API to get in-game scores"""
-        API_KEY = '4176fcde0a060dfeb152fc085e8ec6f9'
-
-        SPORT = 'soccer_epl' 
-        
-        EVENT_ID = self.event_id
-        
-        ENDPOINT = f"https://api.the-odds-api.com/v4/sports/{SPORT}/scores"
-        
-        if self.DEBUG == True:
-            if self.DEBUG_HT == True:
-                filename = "BNTRserver/testing/get_scores_halftime.json"
-                self.DEBUG_HT = False
-            else:
-                filename = "BNTRserver/testing/get_scores_final.json"
-            with open(filename, 'r') as file:
-                odds_response = json.load(file)
-                return odds_response
-            
-        else:
-            odds_response = requests.get(
-                ENDPOINT,
-                params={
-                    'api_key': API_KEY,
-                    'daysFrom': 1,
-                    'eventIds': EVENT_ID,
-                }
-            )
-            if odds_response.status_code == 200:
-                print("Sportsbook API request successful")
-                return json.loads(odds_response.text)
-            else:
-                print('SB API Request failed with status code:', odds_response.status_code)
-                return {}
-            
-        
-
         
     def add_question(self, question):
         """Once Questions are built, insert them back into database using banter API."""
@@ -347,11 +321,11 @@ class gameSession:
     def track_game_time(self):
         """Use Rapid API for current game time. Called every minute."""
             
-        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures?live=all"
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
         
         # FOR TEST: Fixture Id: 1132545
         
-        query = {"fixture": f"{self.fixture_id}"}
+        query = {"id": f"{self.fixture_id}"}
         
         headers = {
             "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
@@ -363,12 +337,13 @@ class gameSession:
         else:
             response = requests.get(url, headers=headers, params=query)
             data = response.json()
-        
+        short_data = data["response"][0]["fixture"]["status"]["short"]
         self.game_time = data["response"][0]["fixture"]["status"]["elapsed"]
-        self.game_stage = data["response"][0]["fixture"]["status"]["short"]
-        self.game_status = "Finished" if data["response"][0]["fixture"]["status"]["long"] == "Match Finished" else "IN PLAY"
-        if self.game_status == "Finished":
-            LOGGER.info("Game finished")
+        self.game_stage = short_data
+        self.game_status = "FINISHED" if (short_data == "FT" or short_data == "AET" or short_data == "PEN")  else "IN PLAY"
+        
+        self.team1_score = data["response"][0]["goals"]["home"]
+        self.team2_score = data["response"][0]["goals"]["away"]
         return
     
     def locate_fixture_id(self):
@@ -380,7 +355,7 @@ class gameSession:
             "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
         }
         
-        query = {"league": str(self.prem_league_id)}
+        query = {"league": str(self.prem_league_id), "status": "NS", "season": "2023"}
         
         if self.DEBUG == True:
             with open(f"BNTRserver/testing/locate_fixture_id.json", 'r') as file:
@@ -395,17 +370,26 @@ class gameSession:
             if (self.team1 in home or self.team2 in home) and (self.team1 in away or self.team2 in away):
                 self.fixture_id = response["fixture"]["id"]
                 return
-
+    def update_game_status(self):
+        url = f"{self.BANTER_API_ENDPOINT}games/{self.gameID}/"
+        
+        data = {
+            "api_key": self.BANTER_API_KEY,
+            "update": [self.team1_score, self.team2_score, f"{self.game_time}:00"],
+            "status": self.game_status
+        }
+        
+        response = requests.post(url=url, json=data)
+        return
     def resolve_questions(self):
-        """Pull the questions from the database with a specific gameID, then resolve the answer for each one using Rapid API."""
+        """Pull the questions from the database with a specific gameID, then post answer to Banter API."""
         
         # Fetch all questions from database
         
-        api_url = f"{self.BANTER_API_ENDPOINT}questions/{self.gameID}/"
+        api_url = f"{self.BANTER_API_ENDPOINT}questions/{self.gameID}/?api_key={self.BANTER_API_KEY}"
         
-        data = {"api_key": self.BANTER_API_KEY}
         
-        response = requests.get(url=api_url, json=data)
+        response = requests.get(url=api_url)
         
         question_list = response.json()["questions"]
         
@@ -455,7 +439,6 @@ class gameSession:
         for question in question_list:
             label = question["label"]
             answer = None
-                
                 
             if label == "h2h":
                 answer = f"opt{question['options'].index(winning_team) + 1}"
@@ -531,8 +514,8 @@ class gameSession:
         for idx, option in enumerate(question['options']):
             if idx > 1:
                 break
-            option_team, option_spread = option.split()
-            option_spread = float(option_spread)
+            match = re.search(r'(?P<name>.+?)\s+(?P<number>-?\d+(\.\d+)?)$', option)
+            option_team, option_spread = match.group('name'), float(match.group('number'))
 
             # If the team matches and the goal difference exceeds the spread
             if team_name == option_team and ((goal_diff >= 0 and goal_diff >= option_spread) or (goal_diff < 0 and goal_diff <= option_spread)):

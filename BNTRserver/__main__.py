@@ -52,9 +52,11 @@ class Server:
                     'update': [0, 0, "00:00"]
                 }
                 requests.post(f'https://www.banter-api.com/api/games/{next["id"]}/', json=request_data)
-                ## current_game = gameSession(next['id'], next['team1'], next['team2'])
-                ## current_game.run_game_session()
+                current_game = gameSession(next['id'], next['team1'], next['team2'])
+                current_game.run_game_session()
                 next_game_found = False
+                if self.DEBUG == True:
+                    break
             
             time.sleep(10)
 
@@ -181,7 +183,7 @@ class Server:
         ## INITIALIZE MEMBER VARIABLES HERE IF NEED BE 
         self.host = host
         self.port = port
-        self.DEBUG = True
+        self.DEBUG = False
 
         ## INITIALIZE API KEY 
         self.API_KEY = '87ab0a3db51d297d3d1cf2d4dcdcb71b'
