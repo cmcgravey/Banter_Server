@@ -46,6 +46,12 @@ class Server:
 
             if diff < timedelta(minutes=15):
                 LOGGER.info("Starting gameSession... ")
+                request_data = {
+                    'api_key': self.API_KEY,
+                    'status': "PREGAME",
+                    'update': [0, 0, "00:00"]
+                }
+                requests.post(f'http://ec2-34-238-139-153.compute-1.amazonaws.com/api/games/{next["id"]}', json=request_data)
                 current_game = gameSession(next['id'], next['team1'], next['team2'])
                 current_game.run_game_session()
                 next_game_found = False

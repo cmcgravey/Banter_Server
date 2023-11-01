@@ -2,3 +2,4 @@ __pycache__
 env
 var
 *.egg-info
+.DS_Store
