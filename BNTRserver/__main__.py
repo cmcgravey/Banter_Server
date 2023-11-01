@@ -24,7 +24,7 @@ class Server:
         next_time = None
 
         if self.DEBUG == True:
-            API_URL = 'http://ec2-34-238-139-153.compute-1.amazonaws.com/api/users/'
+            API_URL = 'https://www.banter-api.com/api/users/'
             user_json = {
                 'api_key': self.API_KEY,
                 'username': 'cmcgravey',
@@ -51,9 +51,9 @@ class Server:
                     'status': "PREGAME",
                     'update': [0, 0, "00:00"]
                 }
-                requests.post(f'http://ec2-34-238-139-153.compute-1.amazonaws.com/api/games/{next["id"]}', json=request_data)
-                current_game = gameSession(next['id'], next['team1'], next['team2'])
-                current_game.run_game_session()
+                requests.post(f'https://www.banter-api.com/api/games/{next["id"]}/', json=request_data)
+                ## current_game = gameSession(next['id'], next['team1'], next['team2'])
+                ## current_game.run_game_session()
                 next_game_found = False
             
             time.sleep(10)
@@ -127,7 +127,7 @@ class Server:
                 'teamID2': teamID2
             }
 
-        api_url = 'http://ec2-34-238-139-153.compute-1.amazonaws.com/api/games/'
+        api_url = 'https://www.banter-api.com/api/games/'
             
         r = requests.post(api_url, json=context)
         response = r.json()
@@ -164,7 +164,7 @@ class Server:
                 "logo": f'{item.text}.png',
             }
 
-            api_url = 'http://ec2-34-238-139-153.compute-1.amazonaws.com/api/teams/'
+            api_url = 'https://www.banter-api.com/api/teams/'
             
             r = requests.post(api_url, json=context)
             response = r.json()
