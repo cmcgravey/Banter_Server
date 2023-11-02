@@ -137,7 +137,7 @@ class gameSession:
             while self.game_stage == "NS":
                 self.track_game_time()
         else:
-            self.game_status = "IN PLAY"
+            self.game_status = "IN_PLAY"
             self.game_stage = "1H"
         
         if self.game_stage == "SUSP" or self.game_stage == "PST" or self.game_stage == "CANC":
@@ -146,8 +146,8 @@ class gameSession:
         ingame_flag = False
         halftime_flag = False
         if self.game_stage == "1H":
-            self.game_status = "IN PLAY"
-            while self.game_status == "IN PLAY":
+            self.game_status = "IN_PLAY"
+            while self.game_status == "IN_PLAY":
                 # Check for game time
                 self.track_game_time()
                 self.update_game_status()
@@ -340,8 +340,12 @@ class gameSession:
         short_data = data["response"][0]["fixture"]["status"]["short"]
         self.game_time = data["response"][0]["fixture"]["status"]["elapsed"]
         self.game_stage = short_data
-        self.game_status = "FINISHED" if (short_data == "FT" or short_data == "AET" or short_data == "PEN")  else "IN PLAY"
-        
+        if short_data == "FT" or short_data == "AET" or short_data == "PEN":
+            self.game_state = "FINISHED"
+        elif short_data == "HT":
+            self.game_status = "HALFTIME"
+        else:
+            short_data = "IN_PLAY"        
         self.team1_score = data["response"][0]["goals"]["home"]
         self.team2_score = data["response"][0]["goals"]["away"]
         return
