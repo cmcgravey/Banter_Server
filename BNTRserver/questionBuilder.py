@@ -163,7 +163,10 @@ class gameSession:
                     LOGGER.info("Creating halftime questions")
                     self.update_scores("halftime")
                     halftime_flag = True
-                time.sleep(60)
+                if self.DEBUG == True:
+                    time.sleep(10)
+                else:
+                    time.sleep(60)
             self.update_scores("final")
             self.update_game_status()
             self.resolve_questions()
