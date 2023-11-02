@@ -17,7 +17,7 @@ class gameSession:
         
         # FOR TEST: Crystal Palace vs. Burnley
         # Event Id = f77d9e4a963ee0e68fb0f71d51fa6855
-        self.DEBUG = False
+        self.DEBUG = True
         self.DEBUG_HT = True
         self.debug_index = 1
         
