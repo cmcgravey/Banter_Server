@@ -12,8 +12,8 @@ class gameSession:
     def __init__(self, gameID, team1_id, team2_id):
         """In-Game Thread. Check game times and send filled-out questions to database periodically."""
         self.game_status = "PENDING"
-        self.game_time = None
-        self.game_stage = None
+        self.game_time = 0
+        self.game_stage = "NS"
         
         # FOR TEST: Crystal Palace vs. Burnley
         # Event Id = f77d9e4a963ee0e68fb0f71d51fa6855
@@ -132,9 +132,11 @@ class gameSession:
         LOGGER.info("Creating pregame questions")
         self.game_stage = "NS"
         self.locate_fixture_id()
+        self.game_status = "PREGAME"
         
         if self.DEBUG == False:
             while self.game_stage == "NS":
+                self.update_game_status()
                 self.track_game_time()
         else:
             self.game_status = "IN_PLAY"
@@ -147,7 +149,7 @@ class gameSession:
         halftime_flag = False
         if self.game_stage == "1H":
             self.game_status = "IN_PLAY"
-            while self.game_status == "IN_PLAY":
+            while self.game_status == "IN_PLAY" or self.game_status == "HALFTIME":
                 # Check for game time
                 self.track_game_time()
                 self.update_game_status()
@@ -344,11 +346,13 @@ class gameSession:
         self.game_time = data["response"][0]["fixture"]["status"]["elapsed"]
         self.game_stage = short_data
         if short_data == "FT" or short_data == "AET" or short_data == "PEN":
-            self.game_state = "FINISHED"
+            self.game_status = "FINISHED"
         elif short_data == "HT":
             self.game_status = "HALFTIME"
+        elif short_data == "NS":
+            self.game_status = "PREGAME"   
         else:
-            short_data = "IN_PLAY"        
+            self.game_status = "IN_PLAY"     
         self.team1_score = data["response"][0]["goals"]["home"]
         self.team2_score = data["response"][0]["goals"]["away"]
         return
