@@ -30,7 +30,8 @@ class Server:
             user_json = {
                 'api_key': self.API_KEY,
                 'username': 'cmcgravey',
-                'password': 'password'
+                'password': 'password',
+                'full_name': 'Colin McGravey'
             }
             requests.post(API_URL, json=user_json)
 
