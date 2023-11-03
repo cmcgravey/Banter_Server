@@ -139,6 +139,8 @@ class gameSession:
                 self.update_game_status()
                 self.track_game_time()
         else:
+            self.update_game_status()
+            time.sleep(120)
             self.game_status = "IN_PLAY"
             self.game_stage = "1H"
         
