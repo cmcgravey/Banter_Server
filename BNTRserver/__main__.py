@@ -26,14 +26,8 @@ class Server:
         iterator = 0
 
         if self.DEBUG == True:
-            API_URL = 'https://www.banter-api.com/api/users/'
-            user_json = {
-                'api_key': self.API_KEY,
-                'username': 'cmcgravey',
-                'password': 'password',
-                'full_name': 'Colin McGravey'
-            }
-            requests.post(API_URL, json=user_json)
+            self.insert_mock_games()
+            self.insert_mock_users() 
 
         while self.signals['shutdown'] != True:
 
@@ -59,11 +53,71 @@ class Server:
                 current_game = gameSession(next['id'], next['team1'], next['team2'])
                 current_game.run_game_session()
                 next_game_found = False
-                self.DEBUG == False
+                if self.DEBUG == True:
+                    self.DEBUG = False
             
             iterator += 1
             time.sleep(10)
 
+    
+    def insert_mock_users(self):
+        """Insert eight mock users to database."""
+        usernames = ['cmcgravey', 'samimud', 'ianglee', 'wraineri', 'jbergmann', 'cvenuti', 'dannyross', 'rwollaston']
+        fullnames = ['Colin McGravey', 'Sami Muduroglu', 'Ian Lee', 'Will Raineri', 'Joe Bergmann', 'Chris Venuti', 'Danny Ross', 'Ryan Wollaston']
+        scores = [42, 56, 24, 87, 36, 32, 65, 104]
+
+        for i in range(0, 8):
+            API_URL = 'https://www.banter-api.com/api/users/'
+            user_json = {
+                "api_key": self.API_KEY,
+                "username": usernames[i],
+                "password": 'password',
+                "full_name": fullnames[i]
+            }
+            r = requests.post(API_URL, json=user_json)
+            r = r.json()
+
+            API_URL = f'https://www.banter-api.com/api/users/{r["userID"]}/'
+            user_json = {
+                "api_key": self.API_KEY,
+                "type": "banter",
+                "new_banter": scores[i]
+            }
+            r = requests.post(API_URL, json=user_json)
+        
+
+    def insert_mock_games(self):
+        """Insert three mock games to database with different statuses."""
+        status_list = ['PREGAME', 'IN_PLAY', 'HALFTIME']
+
+        team_ids = [(9, 10), (4, 16), (11, 15)]
+        updates = {
+            "update0": [0, 0, "00:00"],
+            "update1": [1, 0, "24:00"],
+            "update2": [2, 1, "45:00"]
+        }
+
+        for i in range(0, 3):
+            API_URL = 'https://www.banter-api.com/api/games/'
+            ids = team_ids[i]
+
+            game_json = {
+                'api_key': self.API_KEY,
+                'teamID1': ids[0],
+                'teamID2': ids[1]
+            }
+            r = requests.post(API_URL, json=game_json)
+            r = r.json()
+
+            API_URL = f'https://www.banter-api.com/api/games/{r["id"]}/'
+            update = updates[f'update{i}']
+
+            game_update = {
+                'api_key': self.API_KEY,
+                'update': update,
+                'status': status_list[i]
+            }
+            r = requests.post(API_URL, json=game_update)
 
     def find_next_game(self):
         """Find next upcoming game."""
@@ -71,7 +125,7 @@ class Server:
             next_game = ['', '', '', 'Burnley', '', '', '', 'Crystal Palace'] 
             game = self.insert_game(next_game)
             current_date = datetime.now()
-            current_date += timedelta(minutes=15,seconds=20)
+            current_date += timedelta(minutes=15, seconds=40)
             game_string = current_date
             LOGGER.info(f'Gametime: {game_string}')
             LOGGER.info(f'Game: {game}')

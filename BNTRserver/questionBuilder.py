@@ -17,7 +17,7 @@ class gameSession:
         
         # FOR TEST: Crystal Palace vs. Burnley
         # Event Id = f77d9e4a963ee0e68fb0f71d51fa6855
-        self.DEBUG = True
+        self.DEBUG = False
         self.DEBUG_HT = True
         self.debug_index = 1
         
@@ -140,7 +140,7 @@ class gameSession:
                 self.track_game_time()
         else:
             self.update_game_status()
-            time.sleep(120)
+            time.sleep(30)
             self.game_status = "IN_PLAY"
             self.game_stage = "1H"
         
@@ -168,7 +168,7 @@ class gameSession:
                     self.update_scores("halftime")
                     halftime_flag = True
                 if self.DEBUG == True:
-                    time.sleep(10)
+                    time.sleep(20)
                 else:
                     time.sleep(60)
             self.update_scores("final")
