@@ -18,6 +18,8 @@ class Server:
         """Search for games happening soon and insert into database to begin questions thread."""
         LOGGER.info("Inserting teams...")
         self.insert_teams()
+        LOGGER.info("Inserting users...")
+        self.insert_mock_users()
 
         next_game_found = False
         next = None
