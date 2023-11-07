@@ -61,8 +61,8 @@ class GameHandler():
             current_date = datetime.now()
             current_date += timedelta(minutes=15, seconds=30)
             game_string = current_date
-            LOGGER.info(f'Gametime: {game_string}')
-            LOGGER.info(f'Game: {game}')
+            LOGGER.info(f'{self.LEAGUE} Gametime: {game_string}')
+            LOGGER.info(f'{self.LEAGUE} Game: {game}')
             return game, game_string
             
     def game_handler(self):
@@ -77,8 +77,8 @@ class GameHandler():
         else:
             game, game_string = self.debug_insert()
         
-        LOGGER.info(f'Gametime: {game_string}')
-        LOGGER.info(f'Game: {game}')
+        LOGGER.info(f'{self.LEAGUE} Gametime: {game_string}')
+        LOGGER.info(f'{self.LEAGUE} Game: {game}')
 
         return game, game_string
 
@@ -157,7 +157,8 @@ class GameHandler():
             context = {
                 'api_key': self.API_KEY,
                 'teamID1': self.TEAMS_DICT['Chelsea'],
-                'teamID2': self.TEAMS_DICT['Tottenham']
+                'teamID2': self.TEAMS_DICT['Tottenham'],
+                'league': self.LEAGUE
             }
 
         else: 
@@ -169,7 +170,8 @@ class GameHandler():
             context = {
                 'api_key': self.API_KEY,
                 'teamID1': teamID1,
-                'teamID2': teamID2
+                'teamID2': teamID2,
+                'league': self.LEAGUE
             }
 
         api_url = 'https://www.banter-api.com/api/games/'
