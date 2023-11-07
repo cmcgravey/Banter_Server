@@ -157,7 +157,8 @@ class GameHandler():
             context = {
                 'api_key': self.API_KEY,
                 'teamID1': self.TEAMS_DICT['Chelsea'],
-                'teamID2': self.TEAMS_DICT['Tottenham']
+                'teamID2': self.TEAMS_DICT['Tottenham'],
+                'league': self.LEAGUE
             }
 
         else: 
@@ -169,7 +170,8 @@ class GameHandler():
             context = {
                 'api_key': self.API_KEY,
                 'teamID1': teamID1,
-                'teamID2': teamID2
+                'teamID2': teamID2,
+                'league': self.LEAGUE
             }
 
         api_url = 'https://www.banter-api.com/api/games/'
