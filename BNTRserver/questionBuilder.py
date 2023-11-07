@@ -15,23 +15,59 @@ class gameSession:
         self.game_time = 0
         self.game_stage = "NS"
         
-        # FOR TEST: Crystal Palace vs. Burnley
-        # Event Id = f77d9e4a963ee0e68fb0f71d51fa6855
         self.DEBUG = False
         self.DEBUG_HT = True
         self.debug_index = 1
         
         self.gameID = gameID
         
-
-        self.prem_league_id = 39
-        self.MLS_id = 253
-        self.league_id = 253
+        league_ids = {
+            "MLS": 253,
+            "PREMIER": 39
+        }
+        
+        mls_conversion = {
+            'Atlanta Utd': 'Atlanta United FC', 
+            'Austin': 'Austin', 
+            'CF Montréal': 'Montreal Impact', 
+            'Charlotte': 'Charlotte', 
+            'Chicago Fire': 'Chicago Fire', 
+            'Colorado Rapids': 'Colorado Rapids', 
+            'Columbus Crew': 'Columbus Crew', 
+            'D.C. United': 'DC United', 
+            'Dynamo FC': 'Houston Dynamo', 
+            'FC Cincinnati': 'FC Cincinnati', 
+            'FC Dallas': 'FC Dallas', 
+            'Inter Miami': 'Inter Miami', 
+            'LA Galaxy': 'Los Angeles Galaxy', 
+            'Los Angeles FC': 'Los Angeles FC', 
+            'Minnesota Utd': 'Minnesota United FC', 
+            'Nashville': 'Nashville SC', 
+            'New England': 'New England Revolution', 
+            'NY Red Bulls': 'New York Red Bulls', 
+            'NYCFC': 'New York City FC', 
+            'Orlando City': 'Orlando City SC', 
+            'Philadelphia': 'Philadelphia Union', 
+            'Portland Timbers': 'Portland Timbers', 
+            'Real Salt Lake': 'Real Salt Lake', 
+            'San Jose': 'San Jose Earthquakes', 
+            'Seattle': 'Seattle Sounders', 
+            'Sporting KC': 'Sporting Kansas City', 
+            'St. Louis': 'St. Louis City', 
+            'Toronto FC': 'Toronto FC', 
+            'Vancouver': 'Vancouver Whitecaps'
+            }
         
         self.BANTER_API_KEY = "87ab0a3db51d297d3d1cf2d4dcdcb71b"
         self.BANTER_API_ENDPOINT = "https://www.banter-api.com/api/"
         
+        game_url = f"{self.BANTER_API_ENDPOINT}games/{gameID}/?api_key={self.BANTER_API_KEY}"
         
+        game_response = requests.get(url=game_url).json()
+        
+        league = game_response["league"]
+        
+        self.league_id = league_ids[league]
         # Team 1 is always home team
         
         team1_url = f"{self.BANTER_API_ENDPOINT}teams/{team1_id}/?api_key={self.BANTER_API_KEY}"
@@ -40,12 +76,12 @@ class gameSession:
         team1_response = requests.get(url=team1_url).json()
         team2_response = requests.get(url=team2_url).json()
         
-        self.team1 = team1_response["name"]
-        self.team2 = team2_response["name"]
+        self.team1 = mls_conversion[team1_response["name"]]
+        self.team2 = mls_conversion[team2_response["name"]]
         
         self.h2h_enumeration = {
-            "Home": self.team1,
-            "Away": self.team2,
+            "Home": team1_response["name"],
+            "Away": team2_response["name"],
             "Draw": "Draw"
         }
         
@@ -53,7 +89,6 @@ class gameSession:
         LOGGER.info(f"{self.team2}")
         
         self.fixture_id = self.locate_fixture_id()
-        self.fixture_id = "1139504"
         self.team1_score = 0
         self.team2_score = 0
         
@@ -181,20 +216,33 @@ class gameSession:
         if self.game_stage == "SUSP" or self.game_stage == "PST" or self.game_stage == "CANC":
             LOGGER.info("Match cancelled")
             return
+        
         ingame_flag = False
         halftime_flag = False
+        
+        lock_ingame = False
+        lock_halftime = False
+        
         if self.game_stage == "1H":
+            
+            self.lock_questions("pregame")
             self.game_status = "IN_PLAY"
+            
             while self.game_status == "IN_PLAY" or self.game_status == "HALFTIME":
                 # Check for game time
                 self.track_game_time()
                 self.update_game_status()
                 LOGGER.info(f"Loop {self.debug_index}")
                 self.debug_index += 1
+                
                 if 20 <= self.game_time <= 30 and self.game_stage == "1H" and ingame_flag == False:
                     ingame_flag = True
                     self.build_questions("ingame")
                     LOGGER.info("Creating ingame questions")
+                    
+                elif self.game_time > 30 and lock_ingame == False:
+                    self.lock_questions("ingame")
+                    lock_ingame = True
                     
                 elif self.game_stage == "HT" and halftime_flag == False:
                     self.halftime_corners = self.update_corners()
@@ -202,10 +250,13 @@ class gameSession:
                     LOGGER.info("Creating halftime questions")
                     self.update_scores("halftime")
                     halftime_flag = True
-                if self.DEBUG == True:
-                    time.sleep(20)
-                else:
-                    time.sleep(60)
+                    
+                elif self.game_stage == "2H" and lock_halftime == False:
+                    self.lock_questions("halftime")
+                    lock_halftime = True
+                    
+                time.sleep(20) if self.DEBUG == True else time.sleep(60)
+                
             self.update_scores("final")
             self.update_game_status()
             self.resolve_questions()
@@ -236,6 +287,11 @@ class gameSession:
                     question_odds = self.find_market(sportsbook_data["bookmakers"], staged_questions[i])
                 else:
                     question_odds = self.find_live_market(sportsbook_data["odds"], staged_questions[i])
+                    
+                if question_odds is None:
+                    LOGGER.info("Cannot find a market for posed question. Retrying with new question")
+                    self.build_questions(question_stage=question_stage)
+                    return
                 rewards, pens = self.calculate_banter_points([float(odds["odd"]) for odds in question_odds])
 
                 for j in range(len(rewards)):
@@ -249,8 +305,9 @@ class gameSession:
                          staged_questions[i][f"opt{j+1}"] = (f"{self.h2h_enumeration[question_odds[j]['value']]}", int(rewards[j]), int(pens[j]))
                     else:
                          staged_questions[i][f"opt{j+1}"] = (f"{question_odds[j]['value']}", int(rewards[j]), int(pens[j]))
-                        
-            self.add_question(staged_questions[i])      
+            staged_questions[i]["status"] = "OPEN"
+            self.add_question(staged_questions[i]) 
+            return     
     
     def calculate_banter_points(self, odds_list):
         """Calculate banter points earned/lost based on converting US Moneyline to probability."""
@@ -276,6 +333,7 @@ class gameSession:
                         return market["values"][:2]
                     else:
                         return market["values"]
+        return None
                     
     def find_live_market(self, odds, question):
         """For live questions ingame, find the market pertaining to the question asked."""
@@ -285,6 +343,7 @@ class gameSession:
                     return odd["values"][:2]
                 else:
                     return odd["values"]
+        return None
                 
         
     
@@ -347,14 +406,18 @@ class gameSession:
         short_data = data["response"][0]["fixture"]["status"]["short"]
         self.game_time = data["response"][0]["fixture"]["status"]["elapsed"]
         self.game_stage = short_data
-        if short_data == "FT" or short_data == "AET" or short_data == "PEN":
-            self.game_status = "FINISHED"
-        elif short_data == "HT":
-            self.game_status = "HALFTIME"
-        elif short_data == "NS":
-            self.game_status = "PREGAME"   
+        
+        status_enumeration = {
+            "FT": "FINISHED",
+            "AET": "FINISHED",
+            "PEN": "FINISHED",
+            "HT": "HALFTIME",
+            "NS": "PREGAME"
+        }
+        if short_data in status_enumeration:
+            self.game_status = status_enumeration[short_data]
         else:
-            self.game_status = "IN_PLAY"     
+            self.game_status = "IN_PLAY"   
         self.team1_score = data["response"][0]["goals"]["home"]
         self.team2_score = data["response"][0]["goals"]["away"]
         return
@@ -380,7 +443,7 @@ class gameSession:
         for response in data["response"]:
             home = response["teams"]["home"].values()
             away = response["teams"]["away"].values()
-            if (self.team1 in home or self.team2 in home) and (self.team1 in away or self.team2 in away):
+            if (self.team1 in home) and (self.team2 in away):
                 return response["fixture"]["id"]
     
     def update_game_status(self):
@@ -393,6 +456,12 @@ class gameSession:
         }
         
         response = requests.post(url=url, json=data)
+        
+        if response.status_code == 200:
+            print("POST Request | Game Status -> Database | Successful")
+        else:
+            print('Request failed with status code:', response.status_code)
+        
         return
 
     def update_corners(self):
@@ -408,6 +477,11 @@ class gameSession:
         response = requests.get(url=stat_url,headers=headers,params=querystring)
         
         statistics = response.json()["response"]
+        
+        corners = self.stat_helper(statistics, "Corner Kicks")
+ 
+        return corners
+        
         
         
     def resolve_questions(self):
@@ -437,7 +511,6 @@ class gameSession:
                 statistics = json.load(file)["response"]
         else:
             response = requests.get(stat_url, headers=headers, params=querystring)
-            
             statistics = response.json()["response"]
         
         # Use questions and statistics to find answers and input back into database.
@@ -510,30 +583,15 @@ class gameSession:
                 answer = "opt1" if (self.team1_goals["final"] - self.team2_goals["halftime"]) > 0 else "opt2"
                 
             elif label == "yellow_cards":
-                tot_yc = 0
-                for team in statistics:
-                    for event in team["statistics"]:
-                        if event["type"] == "Yellow Cards":
-                            val = 0 if event["value"] is None else event["value"]
-                            tot_yc += val
+                tot_yc = self.stat_helper(statistics, "Yellow Cards")
                 answer = "opt1" if tot_yc > 5 else "opt2"
                 
             elif label == "red_card":
-                tot_rc = 0
-                for team in statistics:
-                    for event in team["statistics"]:
-                        if event["type"] == "Red Cards":
-                            val = 0 if event["value"] is None else event["value"]
-                            tot_rc += val
+                tot_rc = self.stat_helper(statistics, "Red Cards")
                 answer = "opt1" if tot_rc > 0 else "opt2" 
                 
             elif label == "Corners Over Under":
-                corners = 0
-                for team in statistics:
-                    for event in team["statistics"]:
-                        if event["type"] == "Corner Kicks":
-                            val = 0 if event["value"] is None else event["value"]
-                            corners += val
+                corners = self.stat_helper(statistics, "Corner Kicks")
                 answer = "opt1" if corners > float(question["options"][0].split()[1]) else "opt2"
             else:
                 answer = "opt1"
@@ -551,6 +609,29 @@ class gameSession:
             else:
                 print('Request failed with status code:', response.status_code)
         return
+    
+    def stat_helper(self, stats, key):
+        return sum(
+        (statistic['value'] for team in stats
+         for statistic in team['statistics']
+         if statistic['type'] == key and statistic['value'] is not None),
+        0  # Start the sum at 0
+        )
+        
+    def lock_questions(self, stage):
+        
+        url = f"{self.BANTER_API_ENDPOINT}questions/{self.gameID}/{stage}/"
+        
+        data = {
+            "api_key": self.BANTER_API_KEY,
+        } 
+        response = requests.post(url=url, json=data)
+        
+        if response.status_code == 200:
+            print("POST Request | Question Lock -> Database | Successful")
+        else:
+            print('Request failed with status code:', response.status_code)
+        
     
     def totals_helper(self, question, total_goals):
         """Totals helper."""
@@ -576,4 +657,3 @@ class gameSession:
         """Checking the questions"""
         with open("test_file.json", 'a') as file:
             json.dump(question, file, indent = 4, ensure_ascii=False)
-
