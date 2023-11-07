@@ -16,18 +16,14 @@ LOGGER = logging.getLogger(__name__)
 
 class Server:
 
-    def game_loop(self):
+    def game_loop(self, league):
         """Search for games happening soon and insert into database to begin questions thread."""
 
         ## Insert teams into database and retrieve dictionary 
-        LOGGER.info("Inserting teams...")
-        t = TeamsHandler(self.LEAGUE, self.API_KEY)
+        LOGGER.info(f'Inserting {league} teams... ')
+        t = TeamsHandler(league, self.API_KEY)
         self.teams_dict = t.fetch_teams_dict()
         LOGGER.info(self.teams_dict)
-        
-        ## Insert mock users to database
-        LOGGER.info("Inserting users...")
-        self.insert_mock_users() 
 
         ## Insert mock games to database
         if self.DEBUG == True:
@@ -38,14 +34,14 @@ class Server:
         next = None
         next_time = None
         iterator = 0
-        g = GameHandler(self.LEAGUE, self.API_KEY, self.DEBUG, self.teams_dict)
+        g = GameHandler(league, self.API_KEY, self.DEBUG, self.teams_dict)
 
         ## Begin game loop
         while self.signals['shutdown'] != True:
 
             ## Find next game
             if not next_game_found:
-                LOGGER.info("Searching for games...")
+                LOGGER.info(f'Searching for {league} games...')
                 next, next_time = g.game_handler()
                 next_game_found = True
 
@@ -53,11 +49,11 @@ class Server:
             current_time = datetime.now()
             diff = next_time - current_time
             if (iterator % 6 == 0):
-                LOGGER.info(f'Game is {diff} away')
+                LOGGER.info(f'{league} Game is {diff} away')
 
             ## If game is within 15 minutes of starting, update status and begin gameSession
             if diff < timedelta(minutes=15):
-                LOGGER.info("Starting gameSession... ")
+                LOGGER.info(f'Starting {league} gameSession... ')
                 request_data = {
                     'api_key': self.API_KEY,
                     'status': "PREGAME",
@@ -74,7 +70,6 @@ class Server:
             iterator += 1
             time.sleep(10)
 
-    
     def insert_mock_users(self):
         """Insert eight mock users to database."""
         usernames = ['cmcgravey', 'samimud', 'ianglee', 'wraineri', 'jbergmann', 'cvenuti', 'dannyross', 'rwollaston']
@@ -100,7 +95,6 @@ class Server:
             }
             r = requests.post(API_URL, json=user_json)
         
-
     def insert_mock_games(self):
         """Insert three mock games to database with different statuses."""
         status_list = ['PREGAME', 'IN_PLAY', 'HALFTIME']
@@ -134,7 +128,6 @@ class Server:
             }
             r = requests.post(API_URL, json=game_update)
    
-
     def __init__(self, host, port):
         """Initalize Server."""
         self.signals = {"shutdown": False}
@@ -144,14 +137,27 @@ class Server:
         self.host = host
         self.port = port
         self.DEBUG = False
-        self.LEAGUE = 'MLS'
+        self.THREADS = []
 
         ## INITIALIZE API KEY 
         self.API_KEY = '87ab0a3db51d297d3d1cf2d4dcdcb71b'
         self.teams_dict = {}
 
-        self.game_thread = threading.Thread(target=self.game_loop)
-        self.game_thread.start()
+        ## Insert mock users to database
+        LOGGER.info("Inserting users...")
+        self.insert_mock_users() 
+
+        ## Premier League Game thread
+        LOGGER.info("Starting Premier League thread...")
+        game_thread_prem = threading.Thread(target=self.game_loop, args=['PREMIER'])
+        game_thread_prem.start()
+        self.THREADS.append(game_thread_prem)
+
+        ## MLS Game thread
+        LOGGER.info("Starting MLS thread...")
+        game_thread_mls = threading.Thread(target=self.game_loop, args=['MLS'])
+        game_thread_mls.start()
+        self.THREADS.append(game_thread_mls)
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
 
@@ -195,7 +201,8 @@ class Server:
                 if message_dict["message_type"] == "shutdown":
                     LOGGER.info("shutdown received")
                     self.signals["shutdown"] = True
-                    self.game_thread.join()
+                    for thread in self.THREADS:
+                        thread.join()
                     LOGGER.info("shutting down")
                     return
 

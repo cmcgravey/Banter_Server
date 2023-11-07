@@ -61,8 +61,8 @@ class GameHandler():
             current_date = datetime.now()
             current_date += timedelta(minutes=15, seconds=30)
             game_string = current_date
-            LOGGER.info(f'Gametime: {game_string}')
-            LOGGER.info(f'Game: {game}')
+            LOGGER.info(f'{self.LEAGUE} Gametime: {game_string}')
+            LOGGER.info(f'{self.LEAGUE} Game: {game}')
             return game, game_string
             
     def game_handler(self):
@@ -77,8 +77,8 @@ class GameHandler():
         else:
             game, game_string = self.debug_insert()
         
-        LOGGER.info(f'Gametime: {game_string}')
-        LOGGER.info(f'Game: {game}')
+        LOGGER.info(f'{self.LEAGUE} Gametime: {game_string}')
+        LOGGER.info(f'{self.LEAGUE} Game: {game}')
 
         return game, game_string
 
