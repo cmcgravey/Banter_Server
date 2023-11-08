@@ -110,10 +110,6 @@ class GameHandler():
                     next_game = cells
                     game = self.insert_game(next_game)
                     break
-
-            game = []
-            game_string = ''
-
     
         return game, game_string
             

@@ -206,7 +206,6 @@ class gameSession:
         if self.DEBUG == False:
             while self.game_stage == "NS":
                 self.track_game_time()
-                self.update_game_status()
                 time.sleep(15)
         else:
             self.update_game_status()
@@ -457,7 +456,7 @@ class gameSession:
             "update": [self.team1_score, self.team2_score, f"{self.game_time}:00"],
             "status": self.game_status
         }
-        
+
         response = requests.post(url=url, json=data)
         
         if response.status_code == 200:

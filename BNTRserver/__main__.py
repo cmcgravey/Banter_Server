@@ -25,10 +25,6 @@ class Server:
         self.teams_dict = t.fetch_teams_dict()
         LOGGER.info(self.teams_dict)
 
-        ## Insert mock games to database
-        if self.DEBUG == True:
-            self.insert_mock_games()
-
         ## Setup game loop 
         next_game_found = False
         next = None
@@ -60,9 +56,9 @@ class Server:
                     'update': [0, 0, "00:00"]
                 }
                 requests.post(f'https://www.banter-api.com/api/games/{next["id"]}/', json=request_data)
-                ## current_game = gameSession(next['id'], next['team1'], next['team2'])
-                ## current_game.run_game_session()
-                ## next_game_found = False
+                current_game = gameSession(next['id'], next['team1'], next['team2'])
+                current_game.run_game_session()
+                next_game_found = False
                 if self.DEBUG == True:
                     self.DEBUG = False
             
@@ -113,7 +109,8 @@ class Server:
             game_json = {
                 'api_key': self.API_KEY,
                 'teamID1': ids[0],
-                'teamID2': ids[1]
+                'teamID2': ids[1],
+                'league': "PREMIER"
             }
             r = requests.post(API_URL, json=game_json)
             r = r.json()
