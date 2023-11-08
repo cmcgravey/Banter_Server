@@ -205,8 +205,9 @@ class gameSession:
         
         if self.DEBUG == False:
             while self.game_stage == "NS":
-                self.update_game_status()
                 self.track_game_time()
+                self.update_game_status()
+                time.sleep(15)
         else:
             self.update_game_status()
             time.sleep(30)
@@ -273,6 +274,7 @@ class gameSession:
         staged_questions = random.sample(self.question_templates[question_stage], 1)
         
         sportsbook_data = self.get_sports_odds(question_stage)
+        LOGGER.info(question_stage)
         
         # Build each question sequentially
         for i in range(len(staged_questions)):
@@ -374,7 +376,7 @@ class gameSession:
         if response.status_code == 200:
             print("POST Request | Question -> Database | Successful")
         else:
-            print('Request failed with status code:', response.status_code)
+            print('POST Request | Question -> Database | Request failed with status code:', response.status_code)
             
         if self.DEBUG == True:
             answer_url = f"{self.BANTER_API_ENDPOINT}answers/{response.json()['questionID']}/1/"
@@ -420,6 +422,7 @@ class gameSession:
             self.game_status = "IN_PLAY"   
         self.team1_score = data["response"][0]["goals"]["home"]
         self.team2_score = data["response"][0]["goals"]["away"]
+        LOGGER.info(f"Tracking game time. Status: {self.game_status}. Stage:{self.game_stage}")
         return
     
     def locate_fixture_id(self):
@@ -460,7 +463,7 @@ class gameSession:
         if response.status_code == 200:
             print("POST Request | Game Status -> Database | Successful")
         else:
-            print('Request failed with status code:', response.status_code)
+            print('POST Request | Game Status -> Database | Request failed with status code:', response.status_code)
         
         return
 
@@ -607,7 +610,7 @@ class gameSession:
             if response.status_code == 200:
                 print("POST Request | Question Answer -> Database | Successful")
             else:
-                print('Request failed with status code:', response.status_code)
+                print('POST Request | Question Answer -> Database | Request failed with status code:', response.status_code)
         return
     
     def stat_helper(self, stats, key):
