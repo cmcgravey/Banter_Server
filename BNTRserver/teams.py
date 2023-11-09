@@ -2,19 +2,34 @@
 import json
 import logging
 import requests
-import bs4
 
 
 LOGGER = logging.getLogger(__name__)
 
 class TeamsHandler():
 
-    def __init__(self, league, key):
+    def __init__(self, league, banter_key):
         """Create class instance."""
         self.LEAGUE = league
         self.TEAMS_DICT = {}
-        self.API_KEY = key
-        self.teams_handler()
+        self.BANTER_API_KEY = banter_key
+
+        self.SPORTS_API_HEADERS = {
+            "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
+            "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
+        }
+
+        self.MLS_QUERY = {
+            "league": 253,
+            "season": 2023,
+        }
+
+        self.PREM_QUERY = {
+            "league": 39,
+            "season": 2023,
+        }
+
+        self.insert_teams()
 
     def fetch_teams_dict(self):
         return self.TEAMS_DICT
@@ -28,87 +43,28 @@ class TeamsHandler():
             response = r.json()
             self.TEAMS_DICT[response['name']] = response['teamid']
 
-    def teams_handler(self):
-        """Handle traffic into different league functions."""
-        teams_list = []
-        if self.LEAGUE == 'MLS':
-            teams_list = self.insert_teams_mls()
-        elif self.LEAGUE == 'PREMIER':
-            teams_list = self.insert_teams_prem()
-
-        self.send_to_db(teams_list)
-
-    def insert_teams_mls(self):
+    def insert_teams(self):
         """Insert teams from MLS into the database."""
-        url = 'https://fbref.com/en/comps/22/Major-League-Soccer-Stats'
+        url = "https://api-football-v1.p.rapidapi.com/v3/teams"
         team_list = []
-
-        try:
-            page = requests.get(url)
-
-            if page.status_code == 200:
-                soup = bs4.BeautifulSoup(page.text, 'html.parser')
-                teams = soup.find_all('th', attrs={"class":"left"})
-
-                if teams: 
-                    for idx, team in enumerate(teams):
-                        if idx == 29:
-                            break
-                        name = team.text
-                        name = name.strip()
-                        abbr = name[0] + name[1] + name[2]
-                        context = {
-                            "api_key": self.API_KEY,
-                            "name": name, 
-                            "abbr": abbr.upper(),
-                            "logo": f'{name}.png'
-                        }
-                        team_list.append(context)
-                    
+        if self.LEAGUE == 'MLS':
+            r = requests.get(url, headers=self.SPORTS_API_HEADERS, params=self.MLS_QUERY)
+            data = r.json()
+        elif self.LEAGUE == 'PREMIER':
+            r = requests.get(url, headers=self.SPORTS_API_HEADERS, params=self.PREM_QUERY)
+            data = r.json()
+        
+        for team in data["response"]:
+            if team['team']['code'] == None:
+                abbr = 'NON'
             else:
-                LOGGER.info(f"Failed to retrieve the webpage, Status Code: {page.status_code}")
-        except Exception as e:
-            LOGGER.info(f"Error occured: {str(e)}")
-
-        return team_list
-    
-    def insert_teams_prem(self):
-        """Insert teams from Premier League into the database."""
-        url = 'https://fbref.com/en/comps/9/Premier-League-Stats'
-        team_list = []
-
-        try: 
-            page = requests.get(url)
-
-            if page.status_code == 200:
-
-                soup = bs4.BeautifulSoup(page.text, 'html.parser')
-                teams = soup.find_all('th', attrs={"class":"left"})
-
-                for idx, item in enumerate(teams):
-                    if idx == 20:
-                        break
-
-                    name = item.text
-                    abbr = name[0] + name[1] + name[2]
-                    if abbr == 'Man':
-                        temp, second = name.split()
-                        if second == 'City':
-                            abbr = 'MCI'
-                        else:
-                            abbr = 'MUN'
-
-                    context = {
-                        "api_key": self.API_KEY,
-                        "name": item.text, 
-                        "abbr": abbr.upper(),
-                        "logo": f'{item.text}.png',
-                    }
-
-                    team_list.append(context)
-            else:
-                LOGGER.info(f"Failed to retrieve the webpage, Status Code: {page.status_code}")
-        except Exception as e:
-            LOGGER.info(f"Error occured: {str(e)}")
-
-        return team_list
+                abbr = team['team']['code']
+            context = {
+                "api_key": self.BANTER_API_KEY,
+                "name": team['team']['name'],
+                "abbr": abbr,
+                "logo": team['team']['logo']
+            }
+            team_list.append(context)
+        
+        self.send_to_db(team_list)

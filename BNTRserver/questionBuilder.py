@@ -9,7 +9,7 @@ import re
 LOGGER = logging.getLogger(__name__)
 
 class gameSession:
-    def __init__(self, gameID, team1_id, team2_id):
+    def __init__(self, gameID, team1_id, team2_id, fixtureID):
         """In-Game Thread. Check game times and send filled-out questions to database periodically."""
         self.game_status = "PENDING"
         self.game_time = 0
@@ -25,38 +25,6 @@ class gameSession:
             "MLS": 253,
             "PREMIER": 39
         }
-        
-        mls_conversion = {
-            'Atlanta Utd': 'Atlanta United FC', 
-            'Austin': 'Austin', 
-            'CF Montréal': 'Montreal Impact', 
-            'Charlotte': 'Charlotte', 
-            'Chicago Fire': 'Chicago Fire', 
-            'Colorado Rapids': 'Colorado Rapids', 
-            'Columbus Crew': 'Columbus Crew', 
-            'D.C. United': 'DC United', 
-            'Dynamo FC': 'Houston Dynamo', 
-            'FC Cincinnati': 'FC Cincinnati', 
-            'FC Dallas': 'FC Dallas', 
-            'Inter Miami': 'Inter Miami', 
-            'LA Galaxy': 'Los Angeles Galaxy', 
-            'Los Angeles FC': 'Los Angeles FC', 
-            'Minnesota Utd': 'Minnesota United FC', 
-            'Nashville': 'Nashville SC', 
-            'New England': 'New England Revolution', 
-            'NY Red Bulls': 'New York Red Bulls', 
-            'NYCFC': 'New York City FC', 
-            'Orlando City': 'Orlando City SC', 
-            'Philadelphia': 'Philadelphia Union', 
-            'Portland Timbers': 'Portland Timbers', 
-            'Real Salt Lake': 'Real Salt Lake', 
-            'San Jose': 'San Jose Earthquakes', 
-            'Seattle': 'Seattle Sounders', 
-            'Sporting KC': 'Sporting Kansas City', 
-            'St. Louis': 'St. Louis City', 
-            'Toronto FC': 'Toronto FC', 
-            'Vancouver': 'Vancouver Whitecaps'
-            }
         
         self.BANTER_API_KEY = "87ab0a3db51d297d3d1cf2d4dcdcb71b"
         self.BANTER_API_ENDPOINT = "https://www.banter-api.com/api/"
@@ -76,8 +44,8 @@ class gameSession:
         team1_response = requests.get(url=team1_url).json()
         team2_response = requests.get(url=team2_url).json()
         
-        self.team1 = mls_conversion[team1_response["name"]]
-        self.team2 = mls_conversion[team2_response["name"]]
+        self.team1 = team1_response["name"]
+        self.team2 = team2_response["name"]
         
         self.h2h_enumeration = {
             "Home": team1_response["name"],
@@ -88,7 +56,7 @@ class gameSession:
         LOGGER.info(f"{self.team1}")
         LOGGER.info(f"{self.team2}")
         
-        self.fixture_id = self.locate_fixture_id()
+        self.fixture_id = fixtureID
         self.team1_score = 0
         self.team2_score = 0
         

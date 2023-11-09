@@ -4,9 +4,8 @@ import socket
 import json
 import logging
 import requests
-import bs4
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from BNTRserver.questionBuilder import gameSession
 from BNTRserver.teams import TeamsHandler
 from BNTRserver.games import GameHandler
@@ -17,8 +16,7 @@ LOGGER = logging.getLogger(__name__)
 class Server:
 
     def game_loop(self, league):
-        """Search for games happening soon and insert into database to begin questions thread."""
-
+        """Search for games happening soon and insert into database to begin gameSession."""
         ## Insert teams into database and retrieve dictionary 
         LOGGER.info(f'Inserting {league} teams... ')
         t = TeamsHandler(league, self.API_KEY)
@@ -41,10 +39,12 @@ class Server:
                 next, next_time = g.game_handler()
                 next_game_found = True
 
-            ## Find difference between curr time and start time
-            current_time = datetime.now()
+            ## Find difference between curr time and start time every hour
+            current_time = datetime.now(timezone.utc)
             diff = next_time - current_time
-            if (iterator % 6 == 0):
+            if (iterator % 360 == 0) and next_game_found == True:
+                next_time = g.check_game_start_time()
+                diff = next_time - current_time
                 LOGGER.info(f'{league} Game is {diff} away')
 
             ## If game is within 15 minutes of starting, update status and begin gameSession
@@ -56,11 +56,9 @@ class Server:
                     'update': [0, 0, "00:00"]
                 }
                 requests.post(f'https://www.banter-api.com/api/games/{next["id"]}/', json=request_data)
-                current_game = gameSession(next['id'], next['team1'], next['team2'])
+                current_game = gameSession(next['id'], next['team1'], next['team2'], next['fixtureID'])
                 current_game.run_game_session()
                 next_game_found = False
-                if self.DEBUG == True:
-                    self.DEBUG = False
             
             ## Increment iterator and sleep
             iterator += 1
@@ -90,40 +88,6 @@ class Server:
                 "new_banter": scores[i]
             }
             r = requests.post(API_URL, json=user_json)
-        
-    def insert_mock_games(self):
-        """Insert three mock games to database with different statuses."""
-        status_list = ['PREGAME', 'IN_PLAY', 'HALFTIME']
-
-        team_ids = [(9, 10), (4, 16), (11, 15)]
-        updates = {
-            "update0": [0, 0, "00:00"],
-            "update1": [1, 0, "24:00"],
-            "update2": [2, 1, "45:00"]
-        }
-
-        for i in range(0, 3):
-            API_URL = 'https://www.banter-api.com/api/games/'
-            ids = team_ids[i]
-
-            game_json = {
-                'api_key': self.API_KEY,
-                'teamID1': ids[0],
-                'teamID2': ids[1],
-                'league': "PREMIER"
-            }
-            r = requests.post(API_URL, json=game_json)
-            r = r.json()
-
-            API_URL = f'https://www.banter-api.com/api/games/{r["id"]}/'
-            update = updates[f'update{i}']
-
-            game_update = {
-                'api_key': self.API_KEY,
-                'update': update,
-                'status': status_list[i]
-            }
-            r = requests.post(API_URL, json=game_update)
    
     def __init__(self, host, port):
         """Initalize Server."""

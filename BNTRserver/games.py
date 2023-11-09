@@ -2,56 +2,33 @@
 import json
 import logging
 import requests
-import bs4
 from datetime import datetime, timedelta
 
 LOGGER = logging.getLogger(__name__)
-
-MLS_TIMEZONES = {
-    "Allianz Field": 1,
-    "America First Field": 2,
-    "Audi Field": 0,
-    "Bank of America Stadium": 0, 
-    "BC Place Stadium": 3,
-    "BMO Field": 0, 
-    "BMO Stadium": 3, 
-    "Children's Mercy Park": 1,
-    "Citi Field": 0, 
-    "Citypark": 1,
-    "Dick's Sporting Goods Park": 2,
-    "Dignity Health Sports Park": 2,
-    "DRV PNK Stadium": 0,
-    "Exploria Stadium": 0,
-    "Geodis Park": 1, 
-    "Gillette Stadium": 0, 
-    "Levi's Stadium": 3,
-    "Lower.com Field": 0,
-    "Lumen Field": 3,
-    "Mercedes-Benz Stadium": 0,
-    "PayPal Park": 3,
-    "Providence Park": 3,
-    "Q2 Stadium": 1,
-    "Red Bull Arena": 0,
-    "Rose Bowl": 3,
-    "Shell Energy Stadium": 1,
-    "Soldier Field": 1,
-    "Stade Olympique": 0,
-    "Stade Saputo": 0,
-    "Stanford Stadium": 3,
-    "Subaru Park": 0,
-    "Toyota Stadium": 1,
-    "TQL Stadium": 0,
-    "Yankee Stadium": 0
-}
 
 class GameHandler():
 
     def __init__(self, league, api_key, debug, teams):
         """Create instance of game handler class."""
         self.LEAGUE = league
-        self.API_KEY = api_key
+        self.BANTER_API_KEY = api_key
         self.DEBUG = debug
         self.TEAMS_DICT = teams
+        self.SPORTS_API_HEADERS = {
+            "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
+            "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"    
+        }
+        self.MLS_QUERY = {
+            "league": 253,
+            "season": 2023,
+            "timezone": 'America/Detroit'
+        }
+        self.PREM_QUERY = {
+            "league": 39,
+            "season": 2023,
+            "timezone": 'America/Detroit'
+        }
+        self.CURR_GAME = None
 
     def debug_insert(self):
         """Controlled insertion of game."""
@@ -70,10 +47,7 @@ class GameHandler():
         game_string = None
 
         if self.DEBUG is not True:
-            if self.LEAGUE == 'MLS':
-                game, game_string = self.fetch_next_game_mls()
-            elif self.LEAGUE == 'PREMIER':
-                game, game_string = self.fetch_next_game_prem()
+            game, game_string = self.fetch_next_game()
         else:
             game, game_string = self.debug_insert()
         
@@ -82,97 +56,65 @@ class GameHandler():
 
         return game, game_string
 
-    def fetch_next_game_mls(self):
+    def fetch_next_game(self):
         """Find nearest upcoming game in MLS."""
-        url = 'https://fbref.com/en/comps/22/schedule/Major-League-Soccer-Scores-and-Fixtures'
-        page = requests.get(url)
-        soup = bs4.BeautifulSoup(page.text, 'html.parser')
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
 
-        fixture_table = soup.find('table', {'class': 'stats_table'})
-        rows = fixture_table.find_all('tr')
+        if self.LEAGUE == 'MLS':
+            response = requests.get(url, headers=self.SPORTS_API_HEADERS, params=self.MLS_QUERY)
+            data = response.json()
+        elif self.LEAGUE == 'PREMIER': 
+            response = requests.get(url, headers=self.SPORTS_API_HEADERS, params=self.PREM_QUERY)
+            data = response.json()
 
-        current_date = datetime.now()
-        next_game = None
-
-        for idx, row in enumerate(rows):
-            cells = row.find_all('td')
-
-            if cells == []:
-                pass
-            else:
-                game_date = cells[1].text.replace('-', '/')
-                game_time = cells[2].text.strip()
-                game_time += ':00'
-                game_string = game_date + ' ' + game_time
-                game_string = datetime.strptime(game_string, '%Y/%m/%d %H:%M:%S')
-                game_string = game_string + timedelta(hours=MLS_TIMEZONES[cells[9].text])
-                if game_string >= current_date:
-                    next_game = cells
-                    game = self.insert_game(next_game)
-                    break
-    
-        return game, game_string
-            
-    def fetch_next_game_prem(self):
-        """Find nearest upcoming game in Premier League."""
-        url = 'https://fbref.com/en/comps/9/schedule/Premier-League-Scores-and-Fixtures'
-        page = requests.get(url)
-        soup = bs4.BeautifulSoup(page.text, 'html.parser')
-
-        fixture_table = soup.find('table', {'class': 'stats_table'})
-        rows = fixture_table.find_all('tr')
-
-        current_date = datetime.now()
-        next_game = None
-
-        for idx, row in enumerate(rows):
-            if idx == 0:
-                pass
-            else:
-                cells = row.find_all('td')
-                if cells[1].text == '' or cells[2].text == '':
-                    pass
-                else:
-                    game_date = cells[1].text.replace('-', '/')
-                    game_time = cells[2].text.strip()
-                    game_time += ':00'
-                    game_string = game_date + ' ' + game_time
-                    game_string = datetime.strptime(game_string, '%Y/%m/%d %H:%M:%S')
-                    game_string = game_string - timedelta(hours=5)
-                    if game_string >= current_date:
-                        next_game = cells
-                        game = self.insert_game(next_game)
-                        break
+        for fixture in data["response"]:
+            if fixture["fixture"]["status"]["short"] == "NS":
+                context = {
+                    "api_key": self.BANTER_API_KEY,
+                    "teamID1": self.TEAMS_DICT[fixture["teams"]["home"]["name"]],
+                    "teamID2": self.TEAMS_DICT[fixture["teams"]["away"]["name"]],
+                    "league": self.LEAGUE,
+                    "fixtureID": fixture["fixture"]["id"]
+                }
+                game_string = fixture["fixture"]["date"]
+                game_string = datetime.fromisoformat(game_string)
+                banter_rsp = self.insert_game(context)
+                break
         
-        return game, game_string
+        return banter_rsp, game_string
     
     def insert_game(self, next_game):
         """Insert game into the database."""
-
         if self.DEBUG == True: 
-            context = {
+            next_game = {
                 'api_key': self.API_KEY,
                 'teamID1': self.TEAMS_DICT['Chelsea'],
                 'teamID2': self.TEAMS_DICT['Tottenham'],
-                'league': self.LEAGUE
-            }
-
-        else: 
-            home = next_game[3].text
-            away = next_game[7].text
-            teamID1 = self.TEAMS_DICT[home]
-            teamID2 = self.TEAMS_DICT[away]
-
-            context = {
-                'api_key': self.API_KEY,
-                'teamID1': teamID1,
-                'teamID2': teamID2,
-                'league': self.LEAGUE
+                'league': self.LEAGUE,
+                'fixtureID': 2
             }
 
         api_url = 'https://www.banter-api.com/api/games/'
             
-        r = requests.post(api_url, json=context)
+        r = requests.post(api_url, json=next_game)
         response = r.json()
+        self.CURR_GAME = response
 
         return response
+    
+    def check_game_start_time(self):
+        """Check start time of the game."""
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+        fixture_id = self.CURR_GAME['fixtureID']
+
+        query = {
+            'id': fixture_id
+        }
+
+        response = requests.get(url, headers=self.SPORTS_API_HEADERS, params=query)
+        fixture = response.json()
+
+        game_string = fixture["response"][0]["fixture"]["date"]
+        game_string = datetime.fromisoformat(game_string)
+        
+        return game_string
