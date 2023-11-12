@@ -316,7 +316,7 @@ class gameSession:
                 
         
     
-    def get_sports_odds(self, stage):
+    def get_sports_odds(self, stage, max_attempts=5, delay=8):
         if stage == "pregame":
             url = "https://api-football-v1.p.rapidapi.com/v3/odds/"
         else:
@@ -326,10 +326,19 @@ class gameSession:
             "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
             "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
         }
-
-        response = requests.get(url, headers=headers, params=query)
-        return response.json()["response"][0] # Returns all bookmakers and potential odds
-
+        
+        for attempt in range(max_attempts): # This is essential data. Retry 5 times before failing program.
+            
+            try:
+                response = requests.get(url, headers=headers, params=query)
+                output = response.json()["response"][0]
+                return output
+            except (KeyError, IndexError):
+                if attempt < max_attempts - 1:
+                    time.sleep(delay)  # delay before retrying. Give it longer delay, more room for error
+                else:
+                    LOGGER.info("Sports odds API failed")
+                    return  # re-raise the exception if all retries fail
         
     def add_question(self, question):
         """Once Questions are built, insert them back into database using banter API."""
@@ -372,49 +381,30 @@ class gameSession:
         else:
             response = requests.get(url, headers=headers, params=query)
             data = response.json()
-        short_data = data["response"][0]["fixture"]["status"]["short"]
-        self.game_time = data["response"][0]["fixture"]["status"]["elapsed"]
-        self.game_stage = short_data
         
-        status_enumeration = {
-            "FT": "FINISHED",
-            "AET": "FINISHED",
-            "PEN": "FINISHED",
-            "HT": "HALFTIME",
-            "NS": "PREGAME"
-        }
-        if short_data in status_enumeration:
-            self.game_status = status_enumeration[short_data]
-        else:
-            self.game_status = "IN_PLAY"   
-        self.team1_score = data["response"][0]["goals"]["home"]
-        self.team2_score = data["response"][0]["goals"]["away"]
-        LOGGER.info(f"Tracking game time. Status: {self.game_status}. Stage:{self.game_stage}")
+        try: # Non essential data to the program. Can be passed.
+            data = data["response"][0]
+            short_data = data["fixture"]["status"]["short"]
+            self.game_time = data["fixture"]["status"]["elapsed"]
+            self.game_stage = short_data
+            
+            status_enumeration = {
+                "FT": "FINISHED",
+                "AET": "FINISHED",
+                "PEN": "FINISHED",
+                "HT": "HALFTIME",
+                "NS": "PREGAME"
+            }
+            if short_data in status_enumeration:
+                self.game_status = status_enumeration[short_data]
+            else:
+                self.game_status = "IN_PLAY"   
+            self.team1_score = data["goals"]["home"]
+            self.team2_score = data["goals"]["away"]
+            LOGGER.info(f"Tracking game time. Status: {self.game_status}. Stage:{self.game_stage}")
+        except (KeyError, IndexError):
+            pass 
         return
-    
-    def locate_fixture_id(self):
-        """Locate the fixture ID for the Rapids API - Football API."""
-        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
-
-        headers = {
-            "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
-            "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
-        }
-        
-        query = {"league": str(self.league_id), "status": "NS", "season": "2023"}
-        
-        if self.DEBUG == True:
-            with open(f"BNTRserver/testing/locate_fixture_id.json", 'r') as file:
-                data = json.load(file)
-        else:
-            response = requests.get(url, headers=headers, params=query)
-            data = response.json()
-
-        for response in data["response"]:
-            home = response["teams"]["home"].values()
-            away = response["teams"]["away"].values()
-            if (self.team1 in home) and (self.team2 in away):
-                return response["fixture"]["id"]
     
     def update_game_status(self):
         url = f"{self.BANTER_API_ENDPOINT}games/{self.gameID}/"
@@ -434,7 +424,7 @@ class gameSession:
         
         return
 
-    def update_corners(self):
+    def update_corners(self, max_attempts=5, delay=5):
         """Update halftime corners."""
         stat_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics"
         
@@ -444,13 +434,18 @@ class gameSession:
                 "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
                 "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
         }
-        response = requests.get(url=stat_url,headers=headers,params=querystring)
-        
-        statistics = response.json()["response"]
-        
-        corners = self.stat_helper(statistics, "Corner Kicks")
- 
-        return corners
+       
+        for attempt in range(max_attempts): # Essential data. Limited retries.
+            try:
+                response = requests.get(url=stat_url,headers=headers,params=querystring)
+                statistics = response.json()["response"]
+                corners = self.stat_helper(statistics, "Corner Kicks")
+                return corners
+            except KeyError:
+                if attempt < max_attempts - 1:
+                    time.sleep(delay)  # wait for 2 seconds before retrying
+                else:
+                    return 0 # re-raise the exception if all retries fail      
         
         
         
@@ -461,7 +456,7 @@ class gameSession:
         
         api_url = f"{self.BANTER_API_ENDPOINT}questions/{self.gameID}/?api_key={self.BANTER_API_KEY}"
         
-        
+            
         response = requests.get(url=api_url)
         
         question_list = response.json()["questions"]
@@ -480,8 +475,16 @@ class gameSession:
             with open(f"BNTRserver/testing/postgame_statistics.json", 'r') as file:
                 statistics = json.load(file)["response"]
         else:
-            response = requests.get(stat_url, headers=headers, params=querystring)
-            statistics = response.json()["response"]
+            for attempt in range(5): # Essential data. Return function and don't resolve answers if failed 5 times. 
+                try:
+                    response = requests.get(stat_url, headers=headers, params=querystring)
+                    statistics = response.json()["response"]
+                except KeyError:
+                    if attempt < 4:
+                        time.sleep(5)  # wait for 5 seconds before retrying
+                    else:
+                        LOGGER.info("statistics API failed")
+                        return  # re-raise the exception if all retries fail     
         
         # Use questions and statistics to find answers and input back into database.
         
