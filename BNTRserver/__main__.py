@@ -36,16 +36,21 @@ class Server:
             ## Find next game
             if not next_game_found:
                 LOGGER.info(f'Searching for {league} games...')
-                next, next_time = g.game_handler()
-                next_game_found = True
+                while not next_game_found:
+                    next, next_time = g.fetch_next_game()
+                    if next is not None:
+                        next_game_found = True
 
             ## Find difference between curr time and start time every hour
             current_time = datetime.now(timezone.utc)
             diff = next_time - current_time
             if (iterator % 360 == 0) and next_game_found == True:
                 next_time = g.check_game_start_time()
-                diff = next_time - current_time
-                LOGGER.info(f'{league} Game is {diff} away')
+                if next_time == None:
+                    next_game_found = False
+                else:
+                    diff = next_time - current_time
+                    LOGGER.info(f'{league} Game is {diff} away')
 
             ## If game is within 15 minutes of starting, update status and begin gameSession
             if diff < timedelta(minutes=15):

@@ -2,9 +2,19 @@
 import json
 import logging
 import requests
+import time
 from datetime import datetime, timedelta
 
 LOGGER = logging.getLogger(__name__)
+
+STATUS_DICT = {
+    "SUSP": "Suspended",
+    "PST": "Postponed",
+    "CANC": "Cancelled",
+    "ABD": "Abandoned",
+    "AWD": "Technical Loss",
+    "WO": "Forfeit"
+}
 
 class GameHandler():
 
@@ -41,33 +51,18 @@ class GameHandler():
             LOGGER.info(f'{self.LEAGUE} Gametime: {game_string}')
             LOGGER.info(f'{self.LEAGUE} Game: {game}')
             return game, game_string
-            
-    def game_handler(self):
-        game = None
-        game_string = None
-
-        if self.DEBUG is not True:
-            game, game_string = self.fetch_next_game()
-        else:
-            game, game_string = self.debug_insert()
-        
-        LOGGER.info(f'{self.LEAGUE} Gametime: {game_string}')
-        LOGGER.info(f'{self.LEAGUE} Game: {game}')
-
-        return game, game_string
 
     def fetch_next_game(self):
         """Find nearest upcoming game in MLS."""
-        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
-
         if self.LEAGUE == 'MLS':
-            response = requests.get(url, headers=self.SPORTS_API_HEADERS, params=self.MLS_QUERY)
-            data = response.json()
+            fixtures = self.call_sportsbook_api(self.MLS_QUERY)
         elif self.LEAGUE == 'PREMIER': 
-            response = requests.get(url, headers=self.SPORTS_API_HEADERS, params=self.PREM_QUERY)
-            data = response.json()
+            fixtures = self.call_sportsbook_api(self.PREM_QUERY)
 
-        for fixture in data["response"]:
+        if fixtures == None:
+            return None, None
+
+        for fixture in fixtures:
             if fixture["fixture"]["status"]["short"] == "NS":
                 context = {
                     "api_key": self.BANTER_API_KEY,
@@ -78,10 +73,13 @@ class GameHandler():
                 }
                 game_string = fixture["fixture"]["date"]
                 game_string = datetime.fromisoformat(game_string)
-                banter_rsp = self.insert_game(context)
+                game = self.insert_game(context)
                 break
+
+        LOGGER.info(f'{self.LEAGUE} Gametime: {game_string}')
+        LOGGER.info(f'{self.LEAGUE} Game: {game}')
         
-        return banter_rsp, game_string
+        return game, game_string
     
     def insert_game(self, next_game):
         """Insert game into the database."""
@@ -104,17 +102,38 @@ class GameHandler():
     
     def check_game_start_time(self):
         """Check start time of the game."""
-        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
         fixture_id = self.CURR_GAME['fixtureID']
 
         query = {
             'id': fixture_id
         }
 
-        response = requests.get(url, headers=self.SPORTS_API_HEADERS, params=query)
-        fixture = response.json()
+        fixture = self.call_sportsbook_api(query=query)
 
-        game_string = fixture["response"][0]["fixture"]["date"]
+        if fixture == None:
+            return None
+        elif fixture[0]["fixture"]["status"]["short"] in STATUS_DICT:
+            LOGGER.info(f"Start Time update failed in {self.LEAGUE} thread: Game Status {STATUS_DICT[fixture[0]['fixture']['status']['short']]}")
+            return None
+
+        game_string = fixture[0]["fixture"]["date"]
         game_string = datetime.fromisoformat(game_string)
         
         return game_string
+    
+    def call_sportsbook_api(self, query, max_attempts=5, delay=5):
+        """Call Sportsbook API."""
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+        
+        for attempt in range(max_attempts):
+            try:
+                response = requests.get(url, headers=self.SPORTS_API_HEADERS, params=query)
+                data = response.json()
+                fixtures = data['response']
+                return fixtures
+            except (KeyError, IndexError):
+                if attempt < max_attempts - 1:
+                    time.sleep(delay)
+                else:
+                    LOGGER.info("Sports API failed: games.py --> call_sportsbook_api()")
+                    return None
