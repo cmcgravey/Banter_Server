@@ -48,9 +48,20 @@ class Server:
                 next_time = g.check_game_start_time()
                 if next_time == None:
                     next_game_found = False
+                    ## UPDATE GAME STATUS TO CANCELED 
+                    ## MAYBE REMOVE FROM DB ???
                 else:
                     diff = next_time - current_time
                     LOGGER.info(f'{league} Game is {diff} away')
+                    ## UPDATE GAME START TIME IN BANTER DB
+                    next_time_est = next_time - timedelta(hours=5)
+                    ds = next_time_est.strftime("%m/%d/%y - %I:%M %p")
+                    request_data = {
+                        'api_key': self.API_KEY,
+                        'start_time': ds,
+                        'update': [0, 0, "00:00"]
+                    }
+                    requests.post(f'https://www.banter-api.com/api/games/{next["id"]}/', json=request_data)
 
             ## If game is within 15 minutes of starting, update status and begin gameSession
             if diff < timedelta(minutes=15):
@@ -73,6 +84,7 @@ class Server:
         """Insert eight mock users to database."""
         usernames = ['cmcgravey', 'samimud', 'ianglee', 'wraineri', 'jbergmann', 'cvenuti', 'dannyross', 'rwollaston']
         fullnames = ['Colin McGravey', 'Sami Muduroglu', 'Ian Lee', 'Will Raineri', 'Joe Bergmann', 'Chris Venuti', 'Danny Ross', 'Ryan Wollaston']
+        profilepics = ['man-u-logo', 'bha-logo', 'liverpool-logo', 'inter-miami-logo', 'man-city-logo', 'newcastle-logo', 'la-galaxy-logo', 'chelsea-logo']
         scores = [42, 56, 24, 87, 36, 32, 65, 104]
 
         for i in range(0, 8):
@@ -81,7 +93,8 @@ class Server:
                 "api_key": self.API_KEY,
                 "username": usernames[i],
                 "password": 'password',
-                "full_name": fullnames[i]
+                "full_name": fullnames[i],
+                "prof_pic": profilepics[i]
             }
             r = requests.post(API_URL, json=user_json)
             r = r.json()

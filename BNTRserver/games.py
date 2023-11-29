@@ -71,8 +71,11 @@ class GameHandler():
                     "league": self.LEAGUE,
                     "fixtureID": fixture["fixture"]["id"]
                 }
-                game_string = fixture["fixture"]["date"]
-                game_string = datetime.fromisoformat(game_string)
+                isoform = fixture["fixture"]["date"]
+                game_string = datetime.fromisoformat(isoform)
+                game_string_est = game_string - timedelta(hours=5)
+                ds = game_string_est.strftime("%m/%d/%y - %I:%M %p")
+                context["game_string"] = ds
                 game = self.insert_game(context)
                 break
 
