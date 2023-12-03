@@ -4,7 +4,6 @@ import json
 import random
 import time
 import logging
-import re
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ class gameSession:
         self.game_time = 0
         self.game_stage = "NS"
         
-        self.DEBUG = False
+        self.DEBUG = True
         self.DEBUG_HT = True
         self.debug_index = 1
         
@@ -36,7 +35,6 @@ class gameSession:
         league = game_response["league"]
         
         self.league_id = league_ids[league]
-        # Team 1 is always home team
         
         team1_url = f"{self.BANTER_API_ENDPOINT}teams/{team1_id}/?api_key={self.BANTER_API_KEY}"
         team2_url = f"{self.BANTER_API_ENDPOINT}teams/{team2_id}/?api_key={self.BANTER_API_KEY}"
@@ -59,22 +57,39 @@ class gameSession:
         self.fixture_id = fixtureID
         self.team1_score = 0
         self.team2_score = 0
-        
-        self.halftime_corners = 0
-        
-        self.team1_goals = {
-            "halftime": 0,
-            "final": 0,
-            "name": self.team1
-            
+
+        self.card_template = {
+            "red_card": ["Over 0.5", "Under 0.5"],
+            "yellow_cards": ["Over 4", "Under 4"]
+        }
+
+        self.game_statistics = {
+            "O/U":{
+                "corners_ft": 0,
+                "corners_ht": 0,
+                "goals_h1": 0,
+                "goals_h2": 0,
+                "goals_total": 0,
+                "red_cards": 0,
+                "yellow_cards": 0
+            },
+            "team1": {
+                "halftime": 0,
+                "final": 0,
+                "2nd_half": 0,
+                "name": self.team1
+            },
+            "team2": {
+                "halftime": 0,
+                "final": 0,
+                "2nd_half": 0,
+                "name": self.team2
+            },
+
         }
         
-        self.team2_goals = {
-            "halftime": 0,
-            "final": 0,
-            "name": self.team2
-        }
-        
+
+
         
         self.non_book_questions = ["yellow_cards", "red_card"]
         # Add in: Answer Options, gain/loss for answer
@@ -83,46 +98,64 @@ class gameSession:
             {"question_stage": "pregame",
              "label": "Match Winner", 
              "question": "Who's going to win?",
+             "type": "h2h",
+             "tag": "final",
              "Game_id": self.gameID},
             
             {"question_stage": "pregame",
              "label": "Goals Over/Under",
              "question": "Total goals in game?",
+             "type": "O/U",
+             "tag": "goals_total",
              "Game_id": self.gameID},
             
              {"question_stage": "pregame",
              "label": "Goals Over/Under First Half",
              "question": "Total goals in first half?",
+             "type": "O/U",
+             "tag": "goals_h1",
              "Game_id": self.gameID},
             
             {"question_stage": "pregame",
              "label": "Both Teams Score",
              "question": "Will both teams score in this match?",
+             "type": "btts",
+             "tag": "final",
              "Game_id": self.gameID},
             
             {"question_stage": "pregame",
              "label": "Both Teams Score - First Half",
              "question": "Will both teams score in the first half?",
+             "type": "btts",
+             "tag": "halftime",
              "Game_id": self.gameID},
             
             {"question_stage": "pregame",
              "label": "red_card",
-             "question": "Will there be a red card this game?",
+             "question": "How Many Red Cards?",
+             "type": "O/U",
+             "tag": "red_cards",
              "Game_id": self.gameID},
             
             {"question_stage": "pregame",
              "label": "yellow_cards",
-             "question": "Will there be over 5 yellow cards played?",
+             "question": "How Many Yellow Cards?",
+             "type": "O/U",
+             "tag": "yellow_cards",
              "Game_id": self.gameID},
             
              {"question_stage": "pregame",
              "label": "Odd/Even",
              "question": "Odd/Even Total Goals Scored?",
+             "type": "Odd/Even",
+             "tag": "Null",
              "Game_id": self.gameID},
              
              {"question_stage": "pregame",
              "label": "Corners Over Under",
              "question": "How many Corner Kicks?",
+             "type": "O/U",
+             "tag": "corners_ft",
              "Game_id": self.gameID},
            
         ]
@@ -132,11 +165,22 @@ class gameSession:
             {"question_stage": "ingame",
              "label": "Total Corners (3 way) (1st Half)",
              "question": "How Many Corner Kicks in 1st half?",
+             "type": "O/U 3 Way",
+             "tag": "corners_ht",
              "Game_id": self.gameID},
             
             {"question_stage": "ingame",
              "label": "Over/Under (1st Half)",
              "question": "How many goals will there be at the end of the half?",
+             "type": "O/U",
+             "tag": "goals_h1",
+             "Game_id": self.gameID},
+
+             {"question_stage": "ingame",
+             "label": "Goals Odd/Even",
+             "question": "Odd/Even Goals Scored?",
+             "type": "Odd/Even",
+             "tag": "Null",
              "Game_id": self.gameID},
             
         ]
@@ -145,27 +189,34 @@ class gameSession:
             {"question_stage": "halftime",
              "label": "To Win 2nd Half",
              "question": "Who's winning the 2nd Half?",
+             "type": "h2h",
+             "tag": "2nd_half",
              "Game_id": self.gameID},
             
             {"question_stage": "halftime",
              "label": "Both Teams To Score (2nd Half)",
              "question": "Will both teams score in 2nd Half?",
+             "type": "btts",
+             "tag": "2nd_half",
              "Game_id": self.gameID},
             
             {"question_stage": "halftime",
              "label": "Away Team Score a Goal (2nd Half)",
              "question": "Will the Away Team score in the 2nd Half?",
+             "type": "to_score",
+             "tag": "team2",
              "Game_id": self.gameID},
             
             
             {"question_stage": "halftime",
              "label": "Home Team Score a Goal (2nd Half)",
              "question": "Will the Home Team score in the 2nd Half?",
+             "type": "to_score",
+             "tag": "team1",
              "Game_id": self.gameID}
         ]
     def run_game_session(self):
         """Main thread for running the game"""
-        
         self.build_questions("pregame")
         LOGGER.info("Creating pregame questions")
         self.game_stage = "NS"
@@ -177,10 +228,10 @@ class gameSession:
                 time.sleep(15)
         else:
             self.update_game_status()
-            time.sleep(30)
+            time.sleep(10)
             self.game_status = "IN_PLAY"
             self.game_stage = "1H"
-        
+     
         if self.game_stage == "SUSP" or self.game_stage == "PST" or self.game_stage == "CANC":
             LOGGER.info("Match cancelled")
             return
@@ -190,7 +241,6 @@ class gameSession:
         
         lock_ingame = False
         lock_halftime = False
-        
         if self.game_stage == "1H":
             
             self.lock_questions("pregame")
@@ -203,17 +253,17 @@ class gameSession:
                 LOGGER.info(f"Loop {self.debug_index}")
                 self.debug_index += 1
                 
-                if 20 <= self.game_time <= 30 and self.game_stage == "1H" and ingame_flag == False:
+                if 20 <= self.game_time <= 25 and self.game_stage == "1H" and ingame_flag == False:
                     ingame_flag = True
                     self.build_questions("ingame")
                     LOGGER.info("Creating ingame questions")
                     
-                elif self.game_time > 30 and lock_ingame == False:
+                elif self.game_time > 25 and lock_ingame == False:
                     self.lock_questions("ingame")
                     lock_ingame = True
                     
                 elif self.game_stage == "HT" and halftime_flag == False:
-                    self.halftime_corners = self.update_corners()
+                    self.game_statistics["O/U"]["corners_ht"] = self.update_corners()
                     self.build_questions("halftime")
                     LOGGER.info("Creating halftime questions")
                     self.update_scores("halftime")
@@ -223,7 +273,7 @@ class gameSession:
                     self.lock_questions("halftime")
                     lock_halftime = True
                     
-                time.sleep(20) if self.DEBUG == True else time.sleep(60)
+                time.sleep(10) if self.DEBUG == True else time.sleep(60)
                 
             self.update_scores("final")
             self.update_game_status()
@@ -232,25 +282,31 @@ class gameSession:
     
     def update_scores(self, stage):
         """Keep data for the score at halftime for reference for answering questions."""
-        self.team1_goals[stage] = self.team1_score
-        self.team2_goals[stage] = self.team2_score
-    
+        self.game_statistics["team1"][stage] = self.team1_score
+        self.game_statistics["team2"][stage] = self.team2_score
+
+        if stage == "final":
+            self.game_statistics["team1"]["2nd_half"] = self.team1_score - self.game_statistics["team1"]["halftime"]
+            self.game_statistics["team2"]["2nd_half"] = self.team2_score - self.game_statistics["team2"]["halftime"]
     def build_questions(self, question_stage):
         """Build questions based off of sports odds."""
-        
-        staged_questions = random.sample(self.question_templates[question_stage], 1)
-        
+        if question_stage == "ingame":
+            num_questions = 1
+        else:
+            num_questions = 2
+
+        staged_questions = random.sample(self.question_templates[question_stage], num_questions)
         sportsbook_data = self.get_sports_odds(question_stage)
         LOGGER.info(question_stage)
-        
         # Build each question sequentially
         for i in range(len(staged_questions)):
             # Do different calculation for red and yellow cards, not based on sportsbook odds
             if staged_questions[i]["label"] == "yellow_cards" or staged_questions[i]["label"] == "red_card":
                 # (Question text, points gained if correct, points lost if wrong)
                 rewards, pens = self.calculate_banter_points([1, 1])
-                staged_questions[i]["opt1"] = ("Yes", rewards[0], pens[0])
-                staged_questions[i]["opt2"] = ("No", rewards[1], pens[1])
+                qs = self.card_template[staged_questions[i]["label"]]
+                staged_questions[i]["opt1"] = (qs[0], rewards[0], pens[0])
+                staged_questions[i]["opt2"] = (qs[1], rewards[1], pens[1])
             else:
                 if question_stage == "pregame":
                     question_odds = self.find_market(sportsbook_data["bookmakers"], staged_questions[i])
@@ -275,8 +331,8 @@ class gameSession:
                     else:
                          staged_questions[i][f"opt{j+1}"] = (f"{question_odds[j]['value']}", int(rewards[j]), int(pens[j]))
             staged_questions[i]["status"] = "OPEN"
-            self.add_question(staged_questions[i]) 
-            return     
+            self.add_question(staged_questions[i])
+        return     
     
     def calculate_banter_points(self, odds_list):
         """Calculate banter points earned/lost based on converting US Moneyline to probability."""
@@ -326,6 +382,18 @@ class gameSession:
             "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
             "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
         }
+        if self.DEBUG == True:
+            if stage == "pregame":
+                with open("BNTRserver/testing/pregame_odds.json", 'r') as file:
+                    data = json.load(file)
+                    output = data["response"][0]
+                    return output
+            else:
+                with open("BNTRserver/testing/live_odds.json", 'r') as file:
+                    data = json.load(file)
+                    output = data["response"][0]
+                    return output
+
         
         for attempt in range(max_attempts): # This is essential data. Retry 5 times before failing program.
             
@@ -353,13 +421,6 @@ class gameSession:
             print("POST Request | Question -> Database | Successful")
         else:
             print('POST Request | Question -> Database | Request failed with status code:', response.status_code)
-            
-        if self.DEBUG == True:
-            answer_url = f"{self.BANTER_API_ENDPOINT}answers/{response.json()['questionID']}/1/"
-            input = {"api_key": self.BANTER_API_KEY, "answer": "opt1"}
-            response = requests.post(url=answer_url, json=input)
-            print("POST Request | User Answer -> Database | Successful")
-    
         
         
     def track_game_time(self):
@@ -434,6 +495,12 @@ class gameSession:
                 "X-RapidAPI-Key": "7495251faemshb5e0890629c8956p1d9b37jsn1f10ba9b5f5e",
                 "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
         }
+        if self.DEBUG == True:
+            with open ("BNTRserver/testing/ingame_statistics.json", 'r') as f:
+                data = json.load(f)
+                stats = data["response"]
+                corners = self.stat_helper(stats, "Corner Kicks")
+                return corners
        
         for attempt in range(max_attempts): # Essential data. Limited retries.
             try:
@@ -456,7 +523,7 @@ class gameSession:
         
         api_url = f"{self.BANTER_API_ENDPOINT}questions/{self.gameID}/?api_key={self.BANTER_API_KEY}"
         
-            
+        
         response = requests.get(url=api_url)
         
         question_list = response.json()["questions"]
@@ -472,7 +539,7 @@ class gameSession:
                 "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
         }
         if self.DEBUG == True:
-            with open(f"BNTRserver/testing/postgame_statistics.json", 'r') as file:
+            with open("BNTRserver/testing/postgame_statistics.json", 'r') as file:
                 statistics = json.load(file)["response"]
         else:
             for attempt in range(5): # Essential data. Return function and don't resolve answers if failed 5 times. 
@@ -486,88 +553,55 @@ class gameSession:
                         LOGGER.info("statistics API failed")
                         return  # re-raise the exception if all retries fail     
         
+        self.update_stats(statistics)
+      
         # Use questions and statistics to find answers and input back into database.
-        
-        if self.team1_goals["final"] == self.team2_goals["final"]:
+        team1_goals = self.game_statistics["team1"]
+        team2_goals = self.game_statistics["team2"]
+        if team1_goals["final"] == team2_goals["final"]:
             winning_team = "Draw"
         else:
-            winning_team = max(self.team1_goals, self.team2_goals, key=lambda team: team["final"])["name"]
+            winning_team = max(team1_goals, team2_goals, key=lambda team: team["final"])["name"]
         
-        if self.team1_goals["halftime"] == self.team2_goals["halftime"]:
-            h1_winner = "Draw"
-        else:
-            h1_winner = max(self.team1_goals, self.team2_goals, key=lambda team: team["halftime"])["name"]
-        
-        if (self.team1_goals["final"] - self.team1_goals["halftime"]) > (self.team2_goals["final"] - self.team2_goals["halftime"]):
-            h2_winner = self.team1_goals["name"]
-            
-        elif (self.team1_goals["final"] - self.team1_goals["halftime"]) < (self.team2_goals["final"] - self.team2_goals["halftime"]):
-            h2_winner = self.team2_goals["name"]
-        else:
+        if (team1_goals["2nd_half"]) == (team2_goals["2nd_half"]):
             h2_winner = "Draw"
-            
-        corners = 0
-        for team in statistics:
-            for event in team["statistics"]:
-                if event["type"] == "Corner Kicks":
-                    val = 0 if event["value"] is None else event["value"]
-                    corners += val
+        else:
+            h2_winner = max(team1_goals, team2_goals, key=lambda team: team["2nd_half"])["name"]
+
+        final_total = team1_goals["final"] + team2_goals["final"]
+        h2h_enum = {
+            "final": winning_team,
+            "2nd_half": h2_winner
+        }
         
-        final_total = self.team1_goals["final"] + self.team2_goals["final"]
-        
-        h1_total = self.team1_goals["halftime"] + self.team2_goals["halftime"]
-        
-        h2_total = (self.team1_goals["final"] - self.team2_goals["halftime"]) + (self.team1_goals["final"] - self.team2_goals["halftime"])
         for question in question_list:
             label = question["label"]
+            type = question["type"]
+            tag = question["tag"]
             answer = None
-                
-            if label == "Match Winner":
-                answer = f"opt{question['options'].index(winning_team) + 1}"
-                
-            elif label == "Goals Over/Under":
-                answer = self.totals_helper(question, final_total)
-            
-            elif label == "Goals Over/Under First Half" or label == "Over/Under (1st Half)":
-                answer = self.totals_helper(question, h1_total)
-                
-            elif label == "Both Teams Score":
-                answer = "opt1" if (self.team1_goals["final"] > 0 and self.team2_goals["final"] > 0) else "opt2"
-                
-            elif label == "Both Teams Score - First Half":
-                answer = "opt1" if (self.team1_goals["halftime"] > 0 and self.team2_goals["halftime"] > 0) else "opt2"
 
-            elif label == "Odd/Even":
-                answer = "opt1" if final_total % 2 != 0 else "opt2"
-            
-            elif label == "Total Corners (3 way) (1st Half)":
+            if type == "O/U":
+                answer = self.totals_helper(question, self.game_statistics[type][tag])
+
+            elif type == "O/U 3 Way":
                 answer = self.corners_helper(question)
+
+            elif type == "btts":
+                answer = self.btts_helper(tag)
             
-            elif label == "To Win 2nd Half":
-                answer = f"opt{question['options'].index(h2_winner) + 1}"
-                
-            elif label == "Both Teams To Score (2nd Half)":
-                answer = "opt1" if (self.team1_goals["final"] - self.team1_goals["halftime"]) > 0 and (self.team2_goals["final"] - self.team2_goals["halftime"]) else "opt2"
-                
-            elif label == "Away Team Score a Goal (2nd Half)":
-                answer = "opt1" if (self.team2_goals["final"] - self.team2_goals["halftime"]) > 0 else "opt2"
-                
-            elif label == "Home Team Score a Goal (2nd Half)":
-                answer = "opt1" if (self.team1_goals["final"] - self.team2_goals["halftime"]) > 0 else "opt2"
-                
-            elif label == "yellow_cards":
-                tot_yc = self.stat_helper(statistics, "Yellow Cards")
-                answer = "opt1" if tot_yc > 5 else "opt2"
-                
-            elif label == "red_card":
-                tot_rc = self.stat_helper(statistics, "Red Cards")
-                answer = "opt1" if tot_rc > 0 else "opt2" 
-                
-            elif label == "Corners Over Under":
-                corners = self.stat_helper(statistics, "Corner Kicks")
-                answer = "opt1" if corners > float(question["options"][0].split()[1]) else "opt2"
+            elif type == "to_score":
+                answer = "opt1" if self.game_statistics[tag]["2nd_half"] > 0 else "opt2"
+            
+            elif type == "h2h":
+                answer = f"opt{question['options'].index(h2h_enum[tag]) + 1}"
+
+            elif type == "Odd/Even":
+                answer = "opt1" if final_total % 2 != 0 else "opt2"
+
             else:
                 answer = "opt1"
+
+            print(label, answer)
             # Post answer into database using Banter API
             data = {
                 "api_key": self.BANTER_API_KEY,
@@ -605,12 +639,29 @@ class gameSession:
         else:
             print('Request failed with status code:', response.status_code)
         
-    
-    def totals_helper(self, question, total_goals):
+    def update_stats(self, stats):
+        if self.DEBUG == True:
+            self.game_statistics["team1"]["halftime"] = 2
+            self.game_statistics["team2"]["halftime"] = 0
+            self.game_statistics["team1"]["final"] = 3
+            self.game_statistics["team2"]["final"] = 2
+            self.game_statistics["team1"]["2nd_half"] = 1
+            self.game_statistics["team2"]["2nd_half"] = 2
+
+        self.game_statistics["O/U"]["red_cards"] = self.stat_helper(stats, "Red Cards")
+        self.game_statistics["O/U"]["yellow_cards"] = self.stat_helper(stats, "Yellow Cards")
+        self.game_statistics["O/U"]["corners_ft"] = self.stat_helper(stats, "Corner Kicks")
+
+        self.game_statistics["O/U"]["goals_h1"] = self.game_statistics["team1"]["halftime"] + self.game_statistics["team2"]["halftime"]
+        self.game_statistics["O/U"]["goals_h2"] = self.game_statistics["team1"]["2nd_half"] + self.game_statistics["team2"]["2nd_half"]
+        self.game_statistics["O/U"]["goals_total"] = self.game_statistics["team1"]["final"] + self.game_statistics["team2"]["final"]
+
+
+    def totals_helper(self, question, total):
         """Totals helper."""
         threshold = float(question['options'][0].split()[1])
         
-        if total_goals > threshold:
+        if total > threshold:
             return "opt1"  
         else:
             return "opt2" 
@@ -619,14 +670,19 @@ class gameSession:
         """3 Way Corners Helper."""
         threshold = float(question['options'][0].split()[1])
         
-        if self.halftime_corners > threshold:
+        if self.game_statistics["O/U"]["corners_ht"] > threshold:
             return "opt1"
-        elif self.halftime_corners < threshold:
+        elif self.game_statistics["O/U"]["corners_ht"] < threshold:
             return "opt3"
         else:
             return "opt2"
+    
+    def btts_helper(self, tag):
+        return "opt1" if ((self.game_statistics["team1"][tag] > 0) and (self.game_statistics["team2"][tag] > 0)) else "opt2"
+
         
     def question_testing(self, question):
         """Checking the questions"""
         with open("test_file.json", 'a') as file:
             json.dump(question, file, indent = 4, ensure_ascii=False)
+

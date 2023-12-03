@@ -1,0 +1,73 @@
+{
+    "question_stage": "pregame",
+    "label": "Both Teams Score",
+    "question": "Will both teams score in this match?",
+    "type": "btts",
+    "tag": "final",
+    "Game_id": 0,
+    "opt1": [
+        "Yes",
+        31,
+        6
+    ],
+    "opt2": [
+        "No",
+        18,
+        3
+    ],
+    "status": "OPEN"
+}{
+    "question_stage": "pregame",
+    "label": "Goals Over/Under First Half",
+    "question": "Total goals in first half?",
+    "type": "O/U",
+    "tag": "goals_h1",
+    "Game_id": 0,
+    "opt1": [
+        "Over 3.5",
+        3,
+        0
+    ],
+    "opt2": [
+        "Under 3.5",
+        46,
+        9
+    ],
+    "status": "OPEN"
+}{
+    "question_stage": "ingame",
+    "label": "Goals Odd/Even",
+    "question": "Odd/Even Goals Scored?",
+    "type": "Odd/Even",
+    "tag": "Null",
+    "Game_id": 0,
+    "opt1": [
+        "Odd None",
+        25,
+        5
+    ],
+    "opt2": [
+        "Even None",
+        25,
+        5
+    ],
+    "status": "OPEN"
+}{
+    "question_stage": "halftime",
+    "label": "Home Team Score a Goal (2nd Half)",
+    "question": "Will the Home Team score in the 2nd Half?",
+    "type": "to_score",
+    "tag": "team1",
+    "Game_id": 0,
+    "opt1": [
+        "Yes",
+        31,
+        6
+    ],
+    "opt2": [
+        "No",
+        18,
+        3
+    ],
+    "status": "OPEN"
+}
