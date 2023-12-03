@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 class Server:
 
-    def game_loop(self, league):
+    def game_loop(self, league, debug=False):
         """Search for games happening soon and insert into database to begin gameSession."""
         ## Insert teams into database and retrieve dictionary 
         LOGGER.info(f'Inserting {league} teams... ')
@@ -27,8 +27,8 @@ class Server:
         next_game_found = False
         next = None
         next_time = None
-        iterator = 0
-        g = GameHandler(league, self.API_KEY, self.DEBUG, self.teams_dict)
+        iterator = 1
+        g = GameHandler(league, self.API_KEY, self.teams_dict, debug=debug)
 
         ## Begin game loop
         while self.signals['shutdown'] != True:
@@ -115,7 +115,6 @@ class Server:
         ## INITIALIZE MEMBER VARIABLES HERE IF NEED BE 
         self.host = host
         self.port = port
-        self.DEBUG = False
         self.THREADS = []
 
         ## INITIALIZE API KEY 
@@ -128,15 +127,15 @@ class Server:
 
         ## Premier League Game thread
         LOGGER.info("Starting Premier League thread...")
-        game_thread_prem = threading.Thread(target=self.game_loop, args=['PREMIER'])
+        game_thread_prem = threading.Thread(target=self.game_loop, args=['PREMIER', True])
         game_thread_prem.start()
         self.THREADS.append(game_thread_prem)
 
         ## MLS Game thread
-        LOGGER.info("Starting MLS thread...")
-        game_thread_mls = threading.Thread(target=self.game_loop, args=['MLS'])
-        game_thread_mls.start()
-        self.THREADS.append(game_thread_mls)
+        ## LOGGER.info("Starting MLS thread...")
+        ## game_thread_mls = threading.Thread(target=self.game_loop, args=['MLS'])
+        ## game_thread_mls.start()
+        ## self.THREADS.append(game_thread_mls)
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
 

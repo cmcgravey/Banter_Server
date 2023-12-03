@@ -3,7 +3,7 @@ import json
 import logging
 import requests
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ STATUS_DICT = {
 
 class GameHandler():
 
-    def __init__(self, league, api_key, debug, teams):
+    def __init__(self, league, api_key, teams, debug=False):
         """Create instance of game handler class."""
         self.LEAGUE = league
         self.BANTER_API_KEY = api_key
@@ -40,21 +40,14 @@ class GameHandler():
         }
         self.CURR_GAME = None
 
-    def debug_insert(self):
-        """Controlled insertion of game."""
-        if self.DEBUG == True:
-            next_game = []
-            game = self.insert_game(next_game)
-            current_date = datetime.now()
-            current_date += timedelta(minutes=15, seconds=30)
-            game_string = current_date
-            LOGGER.info(f'{self.LEAGUE} Gametime: {game_string}')
-            LOGGER.info(f'{self.LEAGUE} Game: {game}')
-            return game, game_string
 
     def fetch_next_game(self):
         """Find nearest upcoming game in MLS."""
-        if self.LEAGUE == 'MLS':
+        if self.DEBUG == True: 
+            game = self.insert_game([])
+            game_string = datetime.now(timezone.utc) + timedelta(minutes=15, seconds=30)
+            return game, game_string
+        elif self.LEAGUE == 'MLS':
             fixtures = self.call_sportsbook_api(self.MLS_QUERY)
         elif self.LEAGUE == 'PREMIER': 
             fixtures = self.call_sportsbook_api(self.PREM_QUERY)
@@ -87,12 +80,15 @@ class GameHandler():
     def insert_game(self, next_game):
         """Insert game into the database."""
         if self.DEBUG == True: 
+            game_datetime = datetime.now() + timedelta(minutes=15, seconds=30)
+            game_string = game_datetime.strftime("%m/%d/%y - %I:%M %p")
             next_game = {
-                'api_key': self.API_KEY,
-                'teamID1': self.TEAMS_DICT['Chelsea'],
-                'teamID2': self.TEAMS_DICT['Tottenham'],
+                'api_key': self.BANTER_API_KEY,
+                'teamID1': self.TEAMS_DICT['Burnley'],
+                'teamID2': self.TEAMS_DICT['Crystal Palace'],
                 'league': self.LEAGUE,
-                'fixtureID': 2
+                'fixtureID': 2,
+                'game_string': game_string
             }
 
         api_url = 'https://www.banter-api.com/api/games/'
